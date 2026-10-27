@@ -1,0 +1,219 @@
+\begin{thebibliography}{28}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi: #1}\else
+  \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+
+\bibitem[{b-mc2}(2023)]{sqlcreatecontext}
+{b-mc2}.
+\newblock sql-create-context.
+\newblock \url{https://huggingface.co/datasets/b-mc2/sql-create-context}, 2023.
+
+\bibitem[Bhansali \& Heck(2025)Bhansali and Heck]{bhansali2025dvi}
+Shrenik Bhansali and Larry Heck.
+\newblock Draft, verify, and improve: Toward training-aware speculative
+  decoding.
+\newblock \emph{arXiv preprint arXiv:2510.05421}, 2025.
+
+\bibitem[Cai et~al.(2024)Cai, Li, Geng, Peng, Lee, Chen, and
+  Dao]{cai2024medusa}
+Tianle Cai, Yuhong Li, Zhengyang Geng, Hongwu Peng, Jason~D. Lee, Deming Chen,
+  and Tri Dao.
+\newblock Medusa: Simple {LLM} inference acceleration framework with multiple
+  decoding heads.
+\newblock In \emph{Proceedings of the 41st International Conference on Machine
+  Learning (ICML)}, 2024.
+
+\bibitem[Chaudhary(2023)]{codealpaca}
+Sahil Chaudhary.
+\newblock Code alpaca: An instruction-following {LLaMA} model for code
+  generation.
+\newblock \url{https://github.com/sahil280114/codealpaca}, 2023.
+
+\bibitem[Chen et~al.(2023)Chen, Borgeaud, Irving, Lespiau, Sifre, and
+  Jumper]{chen2023accelerating}
+Charlie Chen, Sebastian Borgeaud, Geoffrey Irving, Jean-Baptiste Lespiau,
+  Laurent Sifre, and John Jumper.
+\newblock Accelerating large language model decoding with speculative sampling.
+\newblock \emph{arXiv preprint arXiv:2302.01318}, 2023.
+
+\bibitem[Chen et~al.(2026)Chen, Lu, Lin, and Ustiugov]{chen2026faser}
+Wenyan Chen, Chengzhi Lu, Yanying Lin, and Dmitrii Ustiugov.
+\newblock {FASER}: Fine-grained phase management for speculative decoding in
+  dynamic {LLM} serving.
+\newblock \emph{arXiv preprint arXiv:2604.20503}, 2026.
+
+\bibitem[Ding et~al.(2023)Ding, Chen, Xu, Qin, Zheng, Hu, Liu, Sun, and
+  Zhou]{ding2023ultrachat}
+Ning Ding, Yulin Chen, Bokai Xu, Yujia Qin, Zhi Zheng, Shengding Hu, Zhiyuan
+  Liu, Maosong Sun, and Bowen Zhou.
+\newblock Enhancing chat language models by scaling high-quality instructional
+  conversations.
+\newblock In \emph{Proceedings of the 2023 Conference on Empirical Methods in
+  Natural Language Processing (EMNLP)}, 2023.
+
+\bibitem[{Glaive AI}(2023)]{glaivefc}
+{Glaive AI}.
+\newblock Glaive function calling v2.
+\newblock
+  \url{https://huggingface.co/datasets/glaiveai/glaive-function-calling-v2},
+  2023.
+
+\bibitem[Huang et~al.(2025{\natexlab{a}})Huang, Wu, Shi, Zou, Yu, and
+  Shi]{huang2025adaspec}
+Kaiyu Huang, Hao Wu, Zhubo Shi, Han Zou, Minchen Yu, and Qingjiang Shi.
+\newblock {AdaSpec}: Adaptive speculative decoding for fast, {SLO}-aware large
+  language model serving.
+\newblock In \emph{Proceedings of the ACM Symposium on Cloud Computing (SoCC)},
+  2025{\natexlab{a}}.
+
+\bibitem[Huang et~al.(2025{\natexlab{b}})Huang, Zhu, Zhan, Hu, Mao, Yu, Liu,
+  and Zhang]{huang2025moesd}
+Zongle Huang, Lei Zhu, Zongyuan Zhan, Ting Hu, Weikai Mao, Xianzhi Yu, Yongpan
+  Liu, and Tianyu Zhang.
+\newblock {MoESD}: Unveil speculative decoding's potential for accelerating
+  sparse {MoE}.
+\newblock In \emph{Advances in Neural Information Processing Systems
+  (NeurIPS)}, 2025{\natexlab{b}}.
+
+\bibitem[Kwon et~al.(2023)Kwon, Li, Zhuang, Sheng, Zheng, Yu, Gonzalez, Zhang,
+  and Stoica]{kwon2023vllm}
+Woosuk Kwon, Zhuohan Li, Siyuan Zhuang, Ying Sheng, Lianmin Zheng, Cody~Hao Yu,
+  Joseph~E. Gonzalez, Hao Zhang, and Ion Stoica.
+\newblock Efficient memory management for large language model serving with
+  {PagedAttention}.
+\newblock In \emph{Proceedings of the 29th Symposium on Operating Systems
+  Principles (SOSP)}, 2023.
+
+\bibitem[Leviathan et~al.(2023)Leviathan, Kalman, and
+  Matias]{leviathan2023fast}
+Yaniv Leviathan, Matan Kalman, and Yossi Matias.
+\newblock Fast inference from transformers via speculative decoding.
+\newblock In \emph{Proceedings of the 40th International Conference on Machine
+  Learning (ICML)}, 2023.
+
+\bibitem[Li et~al.(2025{\natexlab{a}})Li, Zhang, Zhang, Wang, Fu, and
+  Lai]{li2025nightjar}
+Rui Li, Zhaoning Zhang, Libo Zhang, Huaimin Wang, Xiang Fu, and Zhiquan Lai.
+\newblock Nightjar: Dynamic adaptive speculative decoding for large language
+  models serving.
+\newblock \emph{arXiv preprint arXiv:2512.22420}, 2025{\natexlab{a}}.
+
+\bibitem[Li et~al.(2024{\natexlab{a}})Li, Wei, Zhang, and Zhang]{li2024eagle}
+Yuhui Li, Fangyun Wei, Chao Zhang, and Hongyang Zhang.
+\newblock {EAGLE}: Speculative sampling requires rethinking feature
+  uncertainty.
+\newblock In \emph{Proceedings of the 41st International Conference on Machine
+  Learning (ICML)}, 2024{\natexlab{a}}.
+
+\bibitem[Li et~al.(2024{\natexlab{b}})Li, Wei, Zhang, and Zhang]{li2024eagle2}
+Yuhui Li, Fangyun Wei, Chao Zhang, and Hongyang Zhang.
+\newblock {EAGLE-2}: Faster inference of language models with dynamic draft
+  trees.
+\newblock In \emph{Proceedings of the 2024 Conference on Empirical Methods in
+  Natural Language Processing (EMNLP)}, 2024{\natexlab{b}}.
+
+\bibitem[Li et~al.(2025{\natexlab{b}})Li, Wei, Zhang, and Zhang]{li2025eagle3}
+Yuhui Li, Fangyun Wei, Chao Zhang, and Hongyang Zhang.
+\newblock {EAGLE-3}: Scaling up inference acceleration of large language models
+  via training-time test.
+\newblock \emph{arXiv preprint arXiv:2503.01840}, 2025{\natexlab{b}}.
+
+\bibitem[Lightman et~al.(2024)Lightman, Kosaraju, Burda, Edwards, Baker, Lee,
+  Leike, Schulman, Sutskever, and Cobbe]{lightman2023verify}
+Hunter Lightman, Vineet Kosaraju, Yura Burda, Harri Edwards, Bowen Baker, Teddy
+  Lee, Jan Leike, John Schulman, Ilya Sutskever, and Karl Cobbe.
+\newblock Let's verify step by step.
+\newblock In \emph{International Conference on Learning Representations
+  (ICLR)}, 2024.
+
+\bibitem[Liu et~al.(2024{\natexlab{a}})Liu, Hu, Bailis, Cheung, Deng, Stoica,
+  and Zhang]{liu2024osd}
+Xiaoxuan Liu, Lanxiang Hu, Peter Bailis, Alvin Cheung, Zhijie Deng, Ion Stoica,
+  and Hao Zhang.
+\newblock Online speculative decoding.
+\newblock In \emph{Proceedings of the 41st International Conference on Machine
+  Learning (ICML)}, 2024{\natexlab{a}}.
+
+\bibitem[Liu et~al.(2024{\natexlab{b}})Liu, Park, Hu, Kwon, Li, Zhang, Du, Mo,
+  You, Cheung, Deng, Stoica, and Zhang]{liu2024turbospec}
+Xiaoxuan Liu, Jongseok Park, Langxiang Hu, Woosuk Kwon, Zhuohan Li, Chen Zhang,
+  Kuntai Du, Xiangxi Mo, Kaichao You, Alvin Cheung, Zhijie Deng, Ion Stoica,
+  and Hao Zhang.
+\newblock {TurboSpec}: Closed-loop speculation control system for optimizing
+  {LLM} serving goodput.
+\newblock \emph{arXiv preprint arXiv:2406.14066}, 2024{\natexlab{b}}.
+
+\bibitem[Miao et~al.(2024)Miao, Oliaro, Zhang, Cheng, Wang, Zhang, Wong, Zhu,
+  Yang, Shi, Shi, Chen, Arfeen, Abhyankar, and Jia]{miao2024specinfer}
+Xupeng Miao, Gabriele Oliaro, Zhihao Zhang, Xinhao Cheng, Zeyu Wang, Zhengxin
+  Zhang, Rae Ying~Yee Wong, Alan Zhu, Lijie Yang, Xiaoxiang Shi, Chunan Shi,
+  Zhuoming Chen, Daiyaan Arfeen, Reyna Abhyankar, and Zhihao Jia.
+\newblock {SpecInfer}: Accelerating generative large language model serving
+  with tree-based speculative inference and verification.
+\newblock In \emph{Proceedings of the 29th ACM International Conference on
+  Architectural Support for Programming Languages and Operating Systems
+  (ASPLOS)}, 2024.
+
+\bibitem[Park et~al.(2026)Park, Jang, Song, and Jung]{park2026tide}
+Jiyoung Park, Hankyu Jang, Changseok Song, and Wookeun Jung.
+\newblock {TIDE}: Temporal incremental draft engine for self-improving {LLM}
+  inference.
+\newblock In \emph{Proceedings of the International Conference for High
+  Performance Computing, Networking, Storage, and Analysis (SC)}, 2026.
+\newblock arXiv:2602.05145.
+
+\bibitem[Patel et~al.(2024)Patel, Choukse, Zhang, Shah, Goiri, Maleki, and
+  Bianchini]{patel2024splitwise}
+Pratyush Patel, Esha Choukse, Chaojie Zhang, Aashaka Shah, {\'I}{\~n}igo Goiri,
+  Saeed Maleki, and Ricardo Bianchini.
+\newblock Splitwise: Efficient generative {LLM} inference using phase
+  splitting.
+\newblock In \emph{Proceedings of the 51st Annual International Symposium on
+  Computer Architecture (ISCA)}, 2024.
+
+\bibitem[Peng et~al.(2023)Peng, Li, He, Galley, and Gao]{peng2023gpt4instruct}
+Baolin Peng, Chunyuan Li, Pengcheng He, Michel Galley, and Jianfeng Gao.
+\newblock Instruction tuning with {GPT-4}.
+\newblock \emph{arXiv preprint arXiv:2304.03277}, 2023.
+
+\bibitem[Qian et~al.(2026)Qian, Wu, Fu, Zhang, and Zhao]{qian2026drafts}
+Yu-Yang Qian, Hao-Cong Wu, Yichao Fu, Hao Zhang, and Peng Zhao.
+\newblock When drafts evolve: Speculative decoding meets online learning.
+\newblock In \emph{Proceedings of the 43rd International Conference on Machine
+  Learning (ICML)}, 2026.
+
+\bibitem[{Tencent AngelSlim Team}(2025)]{angelslim}
+{Tencent AngelSlim Team}.
+\newblock {AngelSlim}: model compression toolkit, with {EAGLE-3} drafters
+  {AngelSlim/Qwen3-8B\_eagle3} and {AngelSlim/Qwen3-a3B\_eagle3}.
+\newblock \url{https://github.com/Tencent/AngelSlim}, 2025.
+
+\bibitem[Wang et~al.(2026)Wang, Bie, Li, Zhou, Shao, Wang, Liu, Wu, May,
+  Yanamandra, Zhang, Dao, Liang, Athiwaratkun, Song, Xu, and
+  Wu]{wang2026aurora}
+Junxiong Wang, Fengxiang Bie, Jisen Li, Zhongzhu Zhou, Zelei Shao, Yubo Wang,
+  Yinghui Liu, Qingyang Wu, Avner May, Sri Yanamandra, Ce~Zhang, Tri Dao, Percy
+  Liang, Ben Athiwaratkun, Shuaiwen~Leon Song, Chenfeng Xu, and Xiaoxia Wu.
+\newblock When {RL} meets adaptive speculative training: A unified
+  training-serving system.
+\newblock \emph{arXiv preprint arXiv:2602.06932}, 2026.
+
+\bibitem[Wang et~al.(2024)Wang, Chen, Li, Kang, Fang, Zhou, Zheng, Tang, He,
+  Guo, Wang, Wang, Zhou, and Chu]{wang2024burstgpt}
+Yuxin Wang, Yuhan Chen, Zeyu Li, Xueze Kang, Yuchu Fang, Yeju Zhou, Yang Zheng,
+  Zhenheng Tang, Xin He, Rui Guo, Xin Wang, Qiang Wang, Amelie~Chi Zhou, and
+  Xiaowen Chu.
+\newblock {BurstGPT}: A real-world workload dataset to optimize {LLM} serving
+  systems.
+\newblock \emph{arXiv preprint arXiv:2401.17644}, 2024.
+
+\bibitem[Yang et~al.(2025)Yang, Li, Yang, Zhang, Hui, Zheng, Yu,
+  et~al.]{yang2025qwen3}
+An~Yang, Anfeng Li, Baosong Yang, Beichen Zhang, Binyuan Hui, Bo~Zheng, Bowen
+  Yu, et~al.
+\newblock Qwen3 technical report.
+\newblock \emph{arXiv preprint arXiv:2505.09388}, 2025.
+
+\end{thebibliography}

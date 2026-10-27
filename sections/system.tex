@@ -1,0 +1,11 @@
+\section{Implementation}\label{sec:system}
+
+We implement the system on vLLM 0.27.1 (V1 engine) with three engine extensions and two processes beside the server.
+
+\paragraph{Live feature export.} The trainer needs the target's auxiliary hidden states at every accepted position. Inside the EAGLE-3 path of the model runner, we copy them from the GPU to pinned host memory without blocking the step, and a background thread writes them per request into a shared-memory ring buffer. Rejected draft positions are dropped, only tensor-parallel rank 0 writes, and when the buffer is full the exporter drops one step and marks the gap instead of stalling serving. Prefix caching has to be disabled, because positions served from the cache have no hidden states.
+
+\paragraph{Trainer.} A separate process on the same GPU trains the drafter with cross-entropy against the target's own next tokens over the drafter's vocabulary (AdamW, learning rate $5\times10^{-5}$, about 4{,}096 tokens per step). It reads completed requests from the ring buffer into a last-in-first-out buffer of at most 600k tokens, discards data older than 60\,s, and implements duty cycle $d$ by sleeping $(1-d)/d$ times the duration of each step. Data are not the bottleneck: the trainer consumed only \nv{zh.full.usedpct}--\nv{moe.full.usedpct}\% of the requests served in a run (\cref{app:extra}).
+
+\paragraph{Drafter hot swap and speculation switch.} A collective RPC loads new drafter weights into all workers without restarting the engine; in the frozen runs a swap took a median of \nv{swap.m1.med}\,s for the Qwen3-8B drafter and \nv{swap.m2.med}\,s for the MoE drafter. A second RPC switches speculation in the scheduler and the workers together, so drafting stops instead of being computed and discarded; the drafter stays in GPU memory and the round trip takes a median of \nv{switch.med}\,ms.
+
+\paragraph{Controller.} The controller is a 1\,Hz process that reads the engine's metrics endpoint and the trainer's log, writes the duty cycle to a file that the trainer reads before every step, and requests exports through a command file.

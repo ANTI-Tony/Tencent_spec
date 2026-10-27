@@ -1,0 +1,33 @@
+\section{Controller}\label{sec:method}
+
+\paragraph{Setting.} One GPU serves a target model with an EAGLE-3 drafter and also runs a trainer that updates a copy of the drafter from features exported during serving (\cref{sec:system}). Every second the controller reads the number of running requests $C$, whether requests are queued, the acceptance length (smoothed by an exponential moving average, $\hat a$), the mean TPOT over the last second, and the trainer's progress. An operator-provided label $\ell$ names the current traffic domain, for example a product line; a \emph{regime} is a period with one label. The controller sets whether speculation is enabled ($z\in\{0,1\}$), the trainer's duty cycle $d\in\mathcal D=\{0,0.1,0.25,0.5,1\}$, and when the trainer exports a drafter, which is then hot-swapped into the server. The SLO bounds TPOT by twice the single-request decode time, $\Tslo$ (\nv{slo.m1}\,ms for Qwen3-8B, \nv{slo.m2}\,ms for the MoE target). Figure~\ref{fig:controller} summarizes the loop.
+
+\paragraph{Calibration.} Before deployment we measure, once per target, the plain and speculative step times and plain throughput as functions of $C$, the interference coefficient $\kappa(C)$ (serving throughput falls by $\kappa(C)\,d$ at duty $d$), and the trainer's token rate $r$ at full duty; and once per domain, the frontier $\Ghat_\ell$ of \cref{eq:frontier} and the learning curve $a_\ell(N)$, the acceptance after learning from $N$ requests (\cref{sec:measure}). From these the controller predicts the throughput $\Theta(a,z,C)$ and the TPOT for any acceptance, speculation state, and duty. It never trains on a domain without a learning curve.
+
+\paragraph{When to speculate.} Speculation is enabled when the current drafter beats plain decoding at the current load,
+\begin{equation}
+z=\mathbf{1}\big[\Ghat_\ell(\hat a,C)>1\big]\wedge\big(\widehat T_{\mathrm{spec}}\le\Tslo\vee\widehat T_{\mathrm{plain}}>\Tslo\big),\label{eq:switch}
+\end{equation}
+where the second clause keeps plain decoding if speculation would push an otherwise compliant load out of the SLO. A switch takes effect after three consecutive one-second ticks agree, and at most once every 10\,s. Acceptance cannot be measured while speculation is off, so after every drafter swap the controller turns speculation on for 8\,s to measure the new drafter.
+
+\paragraph{Whether training can pay at all.} Let $\amax_\ell=\max_N a_\ell(N)$ be the domain's ceiling. If even the ceiling loses to plain decoding at the current load, $\Ghat_\ell(\amax_\ell,C)\le1$, no amount of training makes speculation worthwhile: the controller does not train, and \cref{eq:switch} turns speculation off instead (the \emph{structural-ceiling} test). Training also stops when the drafter is within 0.02 of its ceiling, or when the last swapped drafter raised the measured acceptance by less than 0.02.
+
+\paragraph{How much to train.} If TPOT is within the SLO and no request is queued, the GPU has spare capacity and training costs latency but no throughput. The controller then picks the largest $d\in\mathcal D$ whose predicted TPOT stays below $0.9\,\Tslo$, i.e., $T_0/(1-\kappa(C)\,d)\le0.9\,\Tslo$, where $T_0$ is the measured TPOT with the slowdown of the current duty removed. Under saturation (requests queued, or $C$ at 95\% of the batch limit), training costs throughput immediately. The controller sets a target acceptance $a^{\dagger}=\hat a+0.8\,(\amax_\ell-\hat a)$, reads from the learning curve how many training tokens $n$ separate $\hat a$ from $a^{\dagger}$, and scores each $d\le0.5$ by
+\begin{equation}
+\begin{aligned}
+V(d)={}&\big[\Theta^{\star}(a^{\dagger})-\Theta(\hat a)\big]\,\max\!\big(0,\widehat H-\tau(d)\big)\\
+&-\Theta(\hat a)\,\kappa(C)\,b(d)\,\tau(d).
+\end{aligned}\label{eq:value}
+\end{equation}
+Here $\tau(d)=n/\min(rd,\rho)$ is the training time when training data become available at rate $\rho$, $b(d)=\min(d,\rho/r)$ is the trainer's actual busy fraction, $\Theta^{\star}$ is the better of speculation on and off, and $\widehat H$ is the forecast remaining length of the regime. The first term is the throughput gained once the improved drafter is in place; the second is the throughput lost while it trains. The controller trains at $\arg\max_d V(d)$ if the maximum is positive and not at all otherwise. Because it does not know when the regime will end, it forecasts $\widehat H$ as the time the regime has lasted so far, clipped to $[90,600]$\,s.
+
+\paragraph{Export and swap.} The trainer exports a drafter after 100, 200, 400, \dots{} requests learned in the current regime, and each export is swapped in immediately. When the label changes, the trainer's buffer is flushed and the schedule restarts.
+
+\paragraph{What the controller assumes.} It needs the domain label and a per-domain calibration, which a short profiling run provides. It does not know when the regime will end or when training should stop. The rules and their constants (\cref{app:controller}) were fixed during development runs before the evaluation checkpoint was frozen and were not changed afterwards.
+
+\begin{figure*}[t]
+\centering
+\input{figures/fig2_controller.tex}
+\caption{The control loop. Each second the controller combines engine and trainer measurements with the frozen calibration and applies three tests: whether the current drafter beats plain decoding (\cref{eq:switch}), whether training can still pay (structural ceiling, ceiling, convergence), and how much to train (SLO slack, or the value of \cref{eq:value} under saturation). Its outputs are a speculation switch, the trainer's duty cycle, and drafter exports that are hot-swapped into the running engine.}
+\label{fig:controller}
+\end{figure*}

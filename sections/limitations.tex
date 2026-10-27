@@ -1,0 +1,11 @@
+\section{Limitations}\label{sec:limitations}
+
+\paragraph{Calibration and labels.} The controller needs an operator label for the traffic domain and a per-domain calibration of the frontier and the learning curve. On an unlabelled or uncalibrated domain it does not train. Mixed production traffic without labels needs online estimates of the learning curve and of the frontier, which we leave open.
+
+\paragraph{Scope of the live evaluation.} We evaluate one engine version (vLLM 0.27.1), one GPU type (H100), two targets of one model family, EAGLE-3 drafters with $k{=}3$, greedy decoding with outputs of at most 512 tokens, single-GPU serving, and prefix caching disabled. Drafter hot swap was tested functionally with tensor parallelism before the freeze, but the controller was not evaluated there. The live workload is a synthetic chat--new-domain--chat sequence; other traffic shapes are covered only in simulation.
+
+\paragraph{Statistics.} Each cell has three paired repetitions, and runs were spread over four nodes of the same type. Paired differences of a few percent between adaptive policies, such as \pol{Full} versus \pol{Informed} on Qwen3-8B code, are within the run-to-run spread.
+
+\paragraph{Development and evaluation.} The rules and constants were developed on runs that drew from the same prompt pools as the frozen evaluation, in different orders. The frozen evaluation therefore does not test the constants on unseen prompts; the simulator validation on unseen traces only partly fills this gap, because it shares the calibration.
+
+\paragraph{Engine and protocol effects.} The engine's speculation-off state is \nv{zh.switch_vs_plain.abs}--\nv{code.switch_vs_plain.abs}\% slower than serving without a drafter, which shapes the dense-model results. Training in the SLO slack changes light-load median TPOT by \nv{code.full.a1}\% and \nv{zh.full.a1}\% on Qwen3-8B. The adapted code drafter beats plain decoding at saturation only when outputs end naturally: with every output forced to 256 tokens it reaches \nv{proto.fixed.n3200}$\times$ plain decoding (\cref{tab:protocol}).

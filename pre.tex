@@ -1,0 +1,42 @@
+%%%%%%%% Preprint version in the Tencent Hunyuan technical-report template %%%%%%%%%%%%%%%%%
+% Same content as example_paper.tex (ICML submission) through sections/*.tex.
+% Template: tencent_hunyuan.sty / tencent_hunyuan.bst / logo/hunyuanlogo.png, taken from the LaTeX sources of
+% HunyuanOCR (arXiv:2511.19575) and Hunyuan-TurboS (arXiv:2505.15431). The logo in the first-page header marks
+% the report as a Tencent Hunyuan publication: confirm with the Tencent collaborators before posting.
+% To drop the logo, comment out \lhead{...} in tencent_hunyuan.sty (fancypagestyle{firstpage}).
+
+\documentclass{article}
+\PassOptionsToPackage{table}{xcolor}
+\usepackage{tencent_hunyuan}
+\input{macros}
+\providecommand{\theHalgorithm}{\arabic{algorithm}}
+
+\title{When to Speculate, When to Learn:\\Workload-Aware Control for Online Self-Evolving Speculative Decoding}
+
+\author{%
+  {\bfseries He Liang}$^{1}$\quad{\bfseries Jingbo Wen}$^{2}$\quad{\bfseries Yue Yang}$^{3}$\\[3pt]
+  $^{1}$Tongji University\quad $^{2}$The University of Sydney\quad $^{3}$Stanford University\\[2pt]
+  {\small Correspondence: \texttt{jwen2914@uni.sydney.edu.au}}}
+
+\begin{document}
+
+\maketitle
+
+\input{sections/abstract}
+\input{sections/intro}
+\input{sections/measure}
+\input{sections/method}
+\input{sections/system}
+\input{sections/evaluation}
+\input{sections/related}
+\input{sections/limitations}
+\input{sections/conclusion}
+
+\bibliography{refs}
+\bibliographystyle{tencent_hunyuan}
+
+\clearpage
+\appendix
+\input{sections/appendix}
+
+\end{document}

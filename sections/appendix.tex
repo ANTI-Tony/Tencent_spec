@@ -1,0 +1,217 @@
+\FloatBarrier
+\section{Frozen Checkpoint and Configuration}\label{app:manifest}
+
+All results of \cref{sec:evaluation} come from one checkpoint frozen before the first run. Table~\ref{tab:manifest} lists the hashes recorded in its manifest; the local copies of the controller, trainer, harness, calibration files, and simulator were checked against them when this paper's tables were generated. Every number in the paper is produced by one script from the run directories and the frozen files, not typed by hand.
+
+\begin{table}[!htbp]
+\caption{Hashes of the frozen checkpoint (first 16 hexadecimal digits of SHA-256).}
+\label{tab:manifest}
+\centering\small
+\input{tables/app_manifest.tex}
+\end{table}
+
+\paragraph{Engine.} vLLM 0.27.1 (V1 engine), one H100 GPU per run, \texttt{max\_num\_seqs} 256, maximum model length 4{,}096, prefix caching disabled, greedy decoding, outputs of at most 512 tokens with natural stopping. GPU memory utilization is \nv{util.prod} for \pol{Production} and 0.90 minus the trainer's reserve for all other policies (\nv{util.m1} for Qwen3-8B, \nv{util.m2} for the MoE target). EAGLE-3 drafters with $k{=}3$, auxiliary target layers $(2,18,33)$ for Qwen3-8B and $(2,24,45)$ for Qwen3-30B-A3B, and a 32k draft vocabulary. The feature export uses a 4\,GB shared-memory ring and samples every step.
+
+\paragraph{Trainer.} Cross-entropy on the target's next tokens over the draft vocabulary; AdamW with learning rate $5\times10^{-5}$, betas $(0.9,0.95)$, no weight decay, 10 warm-up steps, and gradient clipping at 1.0; about 4{,}096 tokens per step and at most 2{,}048 tokens per sequence; a last-in-first-out buffer of at most 600k tokens with a 60\,s age limit; duty cycle by sleeping $(1-d)/d$ times the step time. The trainer's seed is the repetition index.
+
+\FloatBarrier
+\section{Workloads and Calibration}\label{app:calibration}
+
+\subsection{Workloads}\label{app:workloads}
+
+Table~\ref{tab:workloads} describes the domains. For calibration, each domain was deduplicated and shuffled, and the target generated greedy outputs for 3{,}200 training, 300 evaluation, and 300 reserve prompts. The prompts of phase B in the evaluation come from separate pools of unique prompts that exclude every calibration prompt (16{,}222 code and 44{,}776 Chinese prompts); phases A1 and A2 use two disjoint sets of 200 chat prompts per repetition.
+
+\begin{table}[!htbp]
+\caption{Domains. Token counts are means over the target's greedy outputs (Qwen3-8B); \emph{Truncated} is the share of outputs that hit the 512-token limit; \emph{Coverage} is the share of target output tokens inside the 32k draft vocabulary. MATH-500 is used only for the long-output sweep, with thinking enabled and outputs of up to 4{,}096 tokens.}
+\label{tab:workloads}
+\centering\footnotesize\setlength{\tabcolsep}{4pt}
+\input{tables/app_workloads.tex}
+\end{table}
+
+\FloatBarrier
+\subsection{Calibration measurements}
+
+The calibration consists of four measurements, all on one H100 with vLLM 0.27.1 and taken before the freeze; the frozen calibration files store the fits derived from them.
+
+\paragraph{Load sweep.} Closed-loop benchmark at fixed concurrency, plain decoding versus factory-drafter speculation (Table~\ref{tab:loadsweep}). Step times from this sweep give $T_{\mathrm{base}}(C)$ and $T_{\mathrm{spec}}(C)$.
+
+\paragraph{Training interference.} The same benchmark with a trainer on the GPU at duty cycles 0.1, 0.25, 0.5, and 1 (Table~\ref{tab:duty}); $\kappa(C)$ is fitted from it.
+
+\paragraph{Learning curves.} One pass over the 3{,}200 training prompts of each domain in arrival order, exporting drafters after 100, 200, \dots{}, 3{,}200 requests and measuring their acceptance on the evaluation prompts (Table~\ref{tab:learning}).
+
+\paragraph{Frontier.} Throughput of plain decoding and of three or four drafter checkpoints per domain at six loads (Figure~\ref{fig:frontier}); per load, a line through the (acceptance, ratio) points gives $\alpha_\ell(C)$ and $\beta_\ell(C)$ (Table~\ref{tab:frontier}).
+
+\begin{table}[!htbp]
+\caption{Load sweep with factory drafters (closed loop, one H100).}
+\label{tab:loadsweep}
+\centering\small
+\input{tables/app_loadsweep.tex}
+\end{table}
+
+\begin{table}[!htbp]
+\caption{Training interference: Qwen3-8B, short outputs, speculation on; throughput retained and p99 TPOT change relative to the same load without a trainer.}
+\label{tab:duty}
+\centering\small
+\input{tables/app_duty.tex}
+\end{table}
+
+\begin{table}[!htbp]
+\caption{Acceptance length after learning online from $N$ requests (one pass, arrival order; measured on held-out evaluation prompts of the same domain). The ceiling $\amax_\ell$ is the row maximum.}
+\label{tab:learning}
+\centering\small
+\input{tables/app_learning.tex}
+\end{table}
+
+\begin{table}[!htbp]
+\caption{Break-even acceptance $a^{*}_\ell(C)$ from the linear frontier fit, and the largest absolute residual of the fit over all loads.}
+\label{tab:frontier}
+\centering\small
+\input{tables/app_frontier.tex}
+\end{table}
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=\linewidth]{figures/fig3_frontier.pdf}
+\caption{Profitability frontier. (a) Measured speculative over plain throughput for factory (dashed) and adapted (solid) Qwen3-8B drafters; colors as in (b). (b) Fitted break-even acceptance per load. (c) Linear fit versus measurement for all domains and loads.}
+\label{fig:frontier}
+\end{figure}
+
+\paragraph{Output-length protocol.} Saturated throughput depends on how outputs end (Table~\ref{tab:protocol}). In a batch of 600 requests submitted at once, natural stopping mixes a long drain phase at low concurrency, where speculation is favourable; forcing every output to 256 tokens removes it, and the adapted code drafter then stays below plain decoding. The closed-loop evaluation uses natural stopping, as production traffic does.
+
+\begin{table}[!htbp]
+\caption{Code domain, Qwen3-8B: speculative over plain throughput for 600 requests submitted at once, with natural stopping versus outputs forced to 256 tokens.}
+\label{tab:protocol}
+\centering\small
+\input{tables/app_protocol.tex}
+\end{table}
+
+\FloatBarrier
+\section{Controller Details}\label{app:controller}
+
+\begin{algorithm}[!htbp]
+\caption{One control tick (every second).}
+\label{alg:controller}
+\begin{algorithmic}[1]
+\STATE Read $C$, the queue, the speculative-decoding counters, TPOT, and the trainer's state; if more than 20 drafts were made in the last second, $\hat a\leftarrow0.7\,\hat a+0.3\,a_{\mathrm{1s}}$
+\IF{the label $\ell$ changed}
+\STATE reset the regime clock and $\hat a$, flush the trainer's buffer, restart the export schedule
+\ENDIF
+\IF{the trainer exported a new drafter}
+\STATE hot-swap it; if speculation is off, enable it for 8\,s to measure the new drafter
+\ENDIF
+\IF{$\ell$ has no learning curve, or $\amax_\ell-\hat a\le0.02$, or the last swap raised $\hat a$ by less than 0.02}
+\STATE $d\leftarrow0$
+\ELSIF{$\Ghat_\ell(\amax_\ell,C)\le1$}
+\STATE $d\leftarrow0$ \COMMENT{structural ceiling}
+\ELSIF{TPOT $\le\Tslo$ and the server is not saturated}
+\STATE $d\leftarrow$ largest $d\in\mathcal D$ with $T_0/(1-\kappa(C)d)\le0.9\,\Tslo$
+\ELSE
+\STATE $d\leftarrow\arg\max_{d\in\mathcal D,\,d\le0.5}V(d)$ of \cref{eq:value} if the maximum is positive, else $0$
+\ENDIF
+\IF{the requests learned in this regime reached the next export point}
+\STATE request an export; the next export point doubles the gap (100, 200, 400, \dots)
+\ENDIF
+\STATE compute $z^{\star}$ by \cref{eq:switch}; switch to $z^{\star}$ if it has differed from $z$ for 3 ticks, the last switch is at least 10\,s old, and no probe is active
+\end{algorithmic}
+\end{algorithm}
+
+\begin{table}[!htbp]
+\caption{Constants of the controller, as fixed in the frozen checkpoint.}
+\label{tab:constants}
+\centering\small
+\begin{tabular}{@{}ll@{}}
+\toprule
+Constant & Value\\
+\midrule
+Control period & 1\,s\\
+SLO $\Tslo$ & $2\times$ single-request decode time (\nv{slo.m1}\,ms Qwen3-8B, \nv{slo.m2}\,ms MoE)\\
+Duty levels $\mathcal D$ & $\{0, 0.1, 0.25, 0.5, 1\}$\\
+Slack rule margin & predicted TPOT $\le0.9\,\Tslo$\\
+Saturation & queue non-empty, or $C\ge0.95\times256$\\
+Duty cap under saturation & 0.5\\
+Training target $a^{\dagger}$ & $\hat a+0.8\,(\amax_\ell-\hat a)$\\
+Data availability $\rho$ & arrivals plus buffered tokens spread over 10\,s\\
+Horizon forecast $\widehat H$ & age of the regime, clipped to $[90,600]$\,s\\
+Stop at ceiling & $\amax_\ell-\hat a\le0.02$\\
+Stop on convergence & last swap raised $\hat a$ by $<0.02$ (measured $\ge8$\,s after the swap)\\
+Speculation switch & 3 agreeing ticks, $\ge10$\,s between switches, 8\,s probe after a swap\\
+Export schedule & after 100 requests in the regime, then doubling gaps; $\ge5$\,s between requests\\
+Acceptance estimate & moving average with weight 0.3 on the last second (if $>20$ drafts)\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\FloatBarrier
+\section{Policies}\label{app:policies}
+
+\begin{table}[!htbp]
+\caption{The eight policies of the frozen evaluation. All use the factory drafter at the start of each run.}
+\label{tab:policies}
+\centering\small
+\begin{tabularx}{\linewidth}{@{}l>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X@{}}
+\toprule
+Policy & Speculation & Training & Information used\\
+\midrule
+\pol{Production} & always on & none & none (no export, no memory reserve)\\
+\pol{Static} & always on & none & none\\
+\pol{Plain} & no drafter loaded & none & none\\
+\pol{Switch} & \cref{eq:switch} & none & label, frontier\\
+\pol{Threshold} & off whenever saturated & duty 0.5 whenever TPOT is within the SLO & load threshold\\
+\pol{Always} & always on & duty 0.5 from the first request; swaps after 100, 200, 400, \dots{} requests & none\\
+\pol{Informed} & always on & duty 0.5 from the start of phase B until 800 requests are learned; swaps at 100, 200, 400, 800 & start of phase B; stopping point chosen from the learning curves\\
+\pol{Full} & \cref{eq:switch} & \cref{sec:method} & label, frontier, learning curve\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\FloatBarrier
+\section{Additional Results}\label{app:extra}
+
+\begin{table}[!htbp]
+\caption{Phase-B throughput (tok/s) of every run, the mean, and the coefficient of variation (CV) over the three repetitions.}
+\label{tab:runs}
+\centering\small
+\input{tables/app_runs.tex}
+\end{table}
+
+\begin{table}[!htbp]
+\caption{Per-run behaviour of \pol{Full} during phase B, and the node each run used.}
+\label{tab:fullruns}
+\centering\small
+\input{tables/app_full_runs.tex}
+\end{table}
+
+\begin{table}[!htbp]
+\caption{TPOT in milliseconds (means over three runs): median in the light chat phases A1 and A2, and 99th percentile in the saturated phase B.}
+\label{tab:latency}
+\centering\small
+\input{tables/tab_latency.tex}
+\end{table}
+
+\begin{table}[!htbp]
+\caption{Costs of the mechanisms, measured inside the frozen runs.}
+\label{tab:mechanisms}
+\centering\small
+\input{tables/app_mechanisms.tex}
+\end{table}
+
+\FloatBarrier
+\section{Simulator and Held-out Validation}\label{app:sim}
+
+\paragraph{Model.} The simulator (\texttt{sched/sim.py}) advances in 1\,s steps on one GPU. Arrivals of the current domain set the operating concurrency $C$ by solving $\Theta(C)=$ demand, where $\Theta$ includes the frontier gain when speculation is on and the factor $1-\kappa(C)\,d$ when the trainer runs; demand beyond the capacity at $C{=}256$ accumulates in a queue. TPOT is the step time divided by the frontier gain and by $1-\kappa(C)\,d$. Served requests feed a training buffer; training at duty $d$ consumes tokens at rate $r\,d$ and moves acceptance along the domain's learning curve, with the measured fraction transferring to chat. Goodput counts output tokens served in seconds whose TPOT and queueing delay meet the SLO. The simulator and the calibration file were frozen before the validation (hashes in \cref{tab:manifest}).
+
+\paragraph{Workloads.} V1 replays BurstGPT \citep{wang2024burstgpt} chat logs on days 4, 6, 8, 12, 16, and 20 and API logs on days 15, 21, and 22 (development had used day 2 and day 10 only), each for 24\,h and scaled so that the 95th-percentile demand is 0.6, 0.8, or 1.0 times capacity, and the Azure 2023 chat and code traces \citep{patel2024splitwise} for one hour at scales 0.6--1.2. V2 draws 60 bursts: a chat, code, or function-calling phase, followed by a code, SQL, or function-calling burst at 1.0, 1.05, or 1.2 times capacity lasting 5, 10, 20, 60, 180, or 600\,s, and a recovery phase. V3 draws 40 regimes in which traffic switches to Chinese at 128--256 concurrent requests or 1.1 times capacity for 600--1{,}800\,s. V4 draws 20 scenarios with a calm phase of 120--900\,s, a moderate phase, and a 600\,s surge, each at seven surge levels from 0.9 to 1.2 times capacity.
+
+\begin{table}[!htbp]
+\caption{Pre-declared criteria of the frozen-simulator validation and their outcomes.}
+\label{tab:heldout}
+\centering\small
+\input{tables/tab_heldout.tex}
+\end{table}
+
+\begin{table}[!htbp]
+\caption{V2 by burst length: goodput of the controller relative to \pol{SpecAlways}.}
+\label{tab:duration}
+\centering\small
+\input{tables/app_duration.tex}
+\end{table}

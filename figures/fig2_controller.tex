@@ -1,0 +1,31 @@
+% Control loop of the controller (Section 3). TikZ; needs positioning, arrows.meta, calc, fit.
+\begin{tikzpicture}[
+  font=\scriptsize, >={Stealth[length=4pt]}, node distance=4pt,
+  box/.style={draw=black!55, rounded corners=2pt, align=left, inner sep=3.2pt, text width=#1},
+  arr/.style={->, draw=black!65, line width=0.6pt},
+  lab/.style={font=\tiny, text=black!75, align=center, inner sep=1.5pt},
+]
+% controller (right)
+\node[box=8.6cm, fill=black!4] (in) {%
+  {\bfseries Inputs every 1\,s:} running requests $C$, queue, acceptance $\hat a$, TPOT, trainer progress, domain label $\ell$\\
+  {\bfseries Frozen calibration:} frontier $\Ghat_\ell(a,C)$, ceiling $\amax_\ell$, learning curve $a_\ell(N)$, step times, $\kappa(C)$, $r$};
+\node[box=8.6cm, fill=blue!6, below=of in] (r1) {%
+  {\bfseries 1. Speculate?}\enspace $z=\mathbf{1}[\Ghat_\ell(\hat a,C)>1]$ with the SLO clause of Eq.~\ref{eq:switch}; switch after three agreeing ticks, at most every 10\,s; 8\,s probe after each swap};
+\node[box=8.6cm, fill=orange!9, below=of r1] (r2) {%
+  {\bfseries 2. Can training still pay?}\enspace not if $\Ghat_\ell(\amax_\ell,C)\le1$ (structural ceiling), $\hat a\ge\amax_\ell-0.02$, the last swap gained less than 0.02, or $\ell$ has no learning curve};
+\node[box=8.6cm, fill=green!8, below=of r2] (r3) {%
+  {\bfseries 3. How much?}\enspace SLO slack: largest $d$ with predicted TPOT $\le0.9\,\Tslo$; saturated: $\arg\max_{d\le0.5}V(d)$ of Eq.~\ref{eq:value}, with $\widehat H$ the regime's age clipped to $[90,600]$\,s};
+\node[draw=black!45, dashed, rounded corners=3pt, fit=(in)(r3), inner sep=3pt] (ctl) {};
+\node[font=\scriptsize\bfseries, anchor=south east] at (ctl.north east) {Controller (1\,Hz)};
+% serving engine and trainer (left)
+\node[box=3.5cm, fill=black!2, anchor=north east] (eng) at ($(ctl.north west)+(-1.75cm,0)$) {%
+  {\bfseries vLLM engine (one GPU)}\\ target model + EAGLE-3 drafter\\ live export of target features};
+\node[box=3.5cm, fill=black!2, anchor=south east] (trn) at ($(ctl.south west)+(-1.75cm,0)$) {%
+  {\bfseries Trainer (same GPU)}\\ time-sliced at duty cycle $d$\\ last-in-first-out buffer, 60\,s};
+\draw[arr] (eng.south) -- node[lab, right]{features\\(shared memory)} (trn.north);
+% plant <-> controller
+\draw[arr] ($(eng.east)+(0,0.17)$) -- node[lab, above]{metrics} ($(ctl.west |- eng.east)+(0,0.17)$);
+\draw[arr] ($(ctl.west |- eng.east)+(0,-0.17)$) -- node[lab, below]{speculation on/off,\\drafter hot swap} ($(eng.east)+(0,-0.17)$);
+\draw[arr] ($(trn.east)+(0,0.17)$) -- node[lab, above]{progress} ($(ctl.west |- trn.east)+(0,0.17)$);
+\draw[arr] ($(ctl.west |- trn.east)+(0,-0.17)$) -- node[lab, below]{duty $d$, export} ($(trn.east)+(0,-0.17)$);
+\end{tikzpicture}

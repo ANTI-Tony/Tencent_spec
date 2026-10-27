@@ -1,0 +1,29 @@
+% Shared preamble for example_paper.tex (ICML) and pre.tex (Tencent template).
+% Load after the template style. xcolor must already carry the [table] option (\PassOptionsToPackage before the style).
+\usepackage{microtype}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{array}
+\usepackage{xcolor}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{mathtools}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage{tikz}
+\usetikzlibrary{positioning,arrows.meta,calc,fit}
+\usepackage{placeins}
+\usepackage[capitalize,noabbrev]{cleveref}
+
+\definecolor{resultgray}{gray}{0.88}
+\definecolor{resultgraylight}{gray}{0.93}
+
+% every number in the text comes from numbers.tex, generated from the frozen data by
+% code/specsched/paper_assets.py; a missing key prints ??key?? and raises a warning
+\input{numbers}
+
+\newcommand{\Ghat}{\widehat{G}}
+\newcommand{\amax}{a^{\max}}
+\newcommand{\Tslo}{T_{\mathrm{SLO}}}
+\newcommand{\pol}[1]{\textsc{#1}}

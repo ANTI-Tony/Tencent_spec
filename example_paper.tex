@@ -1,0 +1,66 @@
+%%%%%%%% ICML submission version %%%%%%%%%%%%%%%%%
+% Content is shared with pre.tex (preprint, Tencent Hunyuan template) through sections/*.tex.
+% Numbers, tables and data figures are generated from the frozen data by
+%   python3 code/specsched/paper_assets.py <project root> <this folder>
+% Uses the ICML 2026 style files; replace icml2026.sty/.bst when the ICML 2027 files are released.
+
+\documentclass{article}
+\PassOptionsToPackage{table}{xcolor}
+\usepackage{hyperref}
+\newcommand{\theHalgorithm}{\arabic{algorithm}}
+
+% blind submission (authors are hidden automatically)
+\usepackage{icml2026}
+% preprint:      \usepackage[preprint]{icml2026}
+% camera-ready:  \usepackage[accepted]{icml2026}
+
+\input{macros}
+
+\icmltitlerunning{When to Speculate, When to Learn}
+
+\begin{document}
+
+\twocolumn[
+  \icmltitle{When to Speculate, When to Learn: Workload-Aware Control for\\Online Self-Evolving Speculative Decoding}
+
+  \begin{icmlauthorlist}
+    \icmlauthor{He Liang}{tongji}
+    \icmlauthor{Jingbo Wen}{usyd}
+    \icmlauthor{Yue Yang}{stanford}
+  \end{icmlauthorlist}
+
+  \icmlaffiliation{tongji}{Tongji University, Shanghai, China}
+  \icmlaffiliation{usyd}{The University of Sydney, Sydney, Australia}
+  \icmlaffiliation{stanford}{Stanford University, Stanford, CA, USA}
+
+  \icmlcorrespondingauthor{Jingbo Wen}{jwen2914@uni.sydney.edu.au}
+
+  \icmlkeywords{speculative decoding, LLM serving, online learning, resource allocation}
+
+  \vskip 0.3in
+]
+
+\printAffiliationsAndNotice{}
+
+\input{sections/abstract}
+\input{sections/intro}
+\input{sections/measure}
+\input{sections/method}
+\input{sections/system}
+\input{sections/evaluation}
+\input{sections/related}
+\input{sections/limitations}
+\input{sections/conclusion}
+
+\section*{Impact Statement}
+This paper presents work whose goal is to make the serving of large language models more efficient. Serving the same traffic with fewer GPU-hours lowers the cost and energy use per request. We do not see consequences specific to this work beyond those of deploying language models in general.
+
+\bibliography{refs}
+\bibliographystyle{icml2026}
+
+\newpage
+\appendix
+\onecolumn
+\input{sections/appendix}
+
+\end{document}
