@@ -4,15 +4,37 @@
 All results of \cref{sec:evaluation} come from one checkpoint frozen before the first run. Table~\ref{tab:manifest} lists the hashes recorded in its manifest; the local copies of the controller, trainer, harness, calibration files, and simulator were checked against them when this paper's tables were generated. Every number in the paper is produced by one script from the run directories and the frozen files, not typed by hand.
 
 \begin{table}[!htbp]
-\caption{Hashes of the frozen checkpoint (first 16 hexadecimal digits of SHA-256).}
+\caption{Hashes of the frozen checkpoint and of the files added later for \pol{TIDE} and its sensitivity check (first 16 hexadecimal digits of SHA-256).}
 \label{tab:manifest}
 \centering\small
 \input{tables/app_manifest.tex}
 \end{table}
 
-\paragraph{Engine.} vLLM 0.27.1 (V1 engine), one H100 GPU per run, \texttt{max\_num\_seqs} 256, maximum model length 4{,}096, prefix caching disabled, greedy decoding, outputs of at most 512 tokens with natural stopping. GPU memory utilization is \nv{util.prod} for \pol{Production} and 0.90 minus the trainer's reserve for all other policies (\nv{util.m1} for Qwen3-8B, \nv{util.m2} for the MoE target). EAGLE-3 drafters with $k{=}3$, auxiliary target layers $(2,18,33)$ for Qwen3-8B and $(2,24,45)$ for Qwen3-30B-A3B, and a 32k draft vocabulary. The feature export uses a 4\,GB shared-memory ring and samples every step.
+\paragraph{Engine.} vLLM 0.27.1 (V1 engine), one H100 GPU per run, \texttt{max\_num\_seqs} 256, maximum model length 4{,}096, prefix caching disabled, greedy decoding, outputs of at most 512 tokens with natural stopping. GPU memory utilization is \nv{util.prod} for \pol{Production} and 0.90 minus the trainer's reserve of 18\,GB (Qwen3-8B) or 5\,GB (MoE) for all other policies (\nv{util.m1} and \nv{util.m2}); every policy except \pol{Production} that loads a drafter also runs the export path. EAGLE-3 drafters with $k{=}3$, auxiliary target layers $(2,18,33)$ for Qwen3-8B and $(2,24,45)$ for Qwen3-30B-A3B, and a 32k draft vocabulary. The feature export uses a 4\,GB shared-memory ring and samples every step.
 
 \paragraph{Trainer.} Cross-entropy on the target's next tokens over the draft vocabulary; AdamW with learning rate $5\times10^{-5}$, betas $(0.9,0.95)$, no weight decay, 10 warm-up steps, and gradient clipping at 1.0; about 4{,}096 tokens per step and at most 2{,}048 tokens per sequence; a last-in-first-out buffer of at most 600k tokens with a 60\,s age limit; duty cycle by sleeping $(1-d)/d$ times the step time. The trainer's seed is the repetition index.
+
+\paragraph{Environment rebuild.} After the first 72 runs, the cluster's scratch purge (files not accessed for 60 days) deleted part of the frozen software environment: Python sources whose compiled copies were cached had never been re-read. The runs of \pol{TIDE} and the reruns of \cref{app:rerun} therefore use the environment rebuilt with the same 203 package versions (identical package list) and the same 6 patched engine files (identical hashes). \IfFileExists{tables/app_envcheck.tex}{Repeating \nv{envcheck.n} runs of the matrix in the rebuilt environment reproduces their phase-B throughput within \nv{envcheck.maxabs}\% (\cref{tab:envcheck}). On Qwen3-8B code, \pol{Full}'s reruns differ from its frozen runs by \nv{envcheck.full.shift}\% on average; against them, \pol{Full} is \nv{code.full_vs_tide.env}\% (\nv{code.full_vs_tide.env.min} to \nv{code.full_vs_tide.env.max}\% per repetition) relative to \pol{TIDE}, instead of \nv{code.full_vs_tide}\% with the frozen runs.}{}
+
+\IfFileExists{tables/app_envcheck.tex}{\begin{table}[!htbp]
+\caption{Runs of the frozen matrix repeated in the rebuilt environment (same scenario, policy, and repetition).}
+\label{tab:envcheck}
+\centering\small
+\input{tables/app_envcheck.tex}
+\end{table}}{}
+
+\IfFileExists{tables/app_rerun.tex}{\subsection{Interference scan and reruns}\label{app:rerun}
+
+One \pol{TIDE} run on the MoE target lost about a third of its phase-B throughput two minutes into the phase, while its trainer was idle and its acceptance length and concurrency stayed unchanged. To treat every run alike, we then fixed a rule and applied it to all \nv{scan.n} runs. A 5\,s sample of phase B is \emph{clean} if at least 90\% of the 256 request slots are busy, the trainer was idle for the preceding 10\,s, and neither a speculation switch nor a drafter swap happened in those 10\,s. Its reference is the median throughput of the 50 clean samples from other runs of the same scenario and speculation state whose acceptance length is closest. A run is flagged if the median ratio to the reference stays below \nv{scan.thr}\% over some 60\,s of consecutive clean samples.
+
+The rule flagged \nv{scan.flagged.word} runs: the \pol{TIDE} run and \nv{scan.flagged.frozen.word} runs of \pol{Switch} and \pol{Threshold} in the original matrix, none of \pol{Full} (\cref{tab:rerun}). Every unflagged run stays at or above \nv{scan.normal.min} of its reference. The \nv{scan.unscorable} runs of \pol{Always} cannot be scored, because their trainer is never idle for 60\,s. In the two flagged \pol{Switch} runs the drop starts right after speculation is switched off, but the switch itself does not explain it: over the \nv{toggle.n} switches from speculation on to off in phase B, the median throughput of the first minute after the switch is \nv{toggle.med} of that of the second minute, and only these two runs fall below 0.9. We reran each flagged run with its unchanged configuration on a different node; \nv{scan.rerun.phrase}, and the main results use the reruns ($\dagger$ in \cref{tab:runs}). Because only baselines were flagged, the replacement can only narrow the controller's margins. With the original runs instead, the best policy of each scenario and the worst-case shortfalls of \pol{Full} (\nv{orig.full.worstshort}\%) and of the most robust alternative (\nv{orig.alt.minshort}\%) are unchanged, because the replaced runs decide none of them; the margin of \pol{Full} over \pol{TIDE} on MoE grows from \nv{moe.full_vs_tide}\% to \nv{moe.full_vs_tide.orig}\%.
+
+\begin{table}[!htbp]
+\caption{Runs flagged by the interference scan: the worst 60\,s ratio to the reference and phase-B throughput of the original run and of its rerun on another node.}
+\label{tab:rerun}
+\centering\small
+\input{tables/app_rerun.tex}
+\end{table}}{}
 
 \FloatBarrier
 \section{Workloads and Calibration}\label{app:calibration}
@@ -145,7 +167,7 @@ Acceptance estimate & moving average with weight 0.3 on the last second (if $>20
 \section{Policies}\label{app:policies}
 
 \begin{table}[!htbp]
-\caption{The eight policies of the frozen evaluation. All use the factory drafter at the start of each run.}
+\caption{The policies of the frozen evaluation. All use the factory drafter at the start of each run.}
 \label{tab:policies}
 \centering\small
 \begin{tabularx}{\linewidth}{@{}l>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X@{}}
@@ -157,12 +179,15 @@ Policy & Speculation & Training & Information used\\
 \pol{Plain} & no drafter loaded & none & none\\
 \pol{Switch} & \cref{eq:switch} & none & label, frontier\\
 \pol{Threshold} & off whenever saturated & duty 0.5 whenever TPOT is within the SLO & load threshold\\
+\pol{TIDE} & \cref{eq:switch} & duty 0.5 while collection is on; rounds of 200 requests, keep-if-better, roll back and stop otherwise; re-enabled by acceptance drift & label (frontier only), frontier\\
 \pol{Always} & always on & duty 0.5 from the first request; swaps after 100, 200, 400, \dots{} requests & none\\
 \pol{Informed} & always on & duty 0.5 from the start of phase B until 800 requests are learned; swaps at 100, 200, 400, 800 & start of phase B; stopping point chosen from the learning curves\\
 \pol{Full} & \cref{eq:switch} & \cref{sec:method} & label, frontier, learning curve\\
 \bottomrule
 \end{tabularx}
 \end{table}
+
+\paragraph{The TIDE-style baseline.} \pol{TIDE} reproduces Algorithm~1 of TIDE \citep{park2026tide} in the co-located setting. Its speculation rule is that of \pol{Switch}. Collection is enabled when serving starts. Two moving averages of the measured acceptance length, with weights 0.3 and 0.02 on the newest second and initialised from the first 10 measured seconds, detect a distribution shift when the short one falls more than 0.1 below the long one; a shift re-enables collection. While collection is enabled the trainer runs at duty 0.5, the duty of the other fixed-duty baselines (TIDE itself trains on separate GPUs). After every 200 requests learned the trainer exports a drafter, which is swapped in and measured for 8\,s (with a speculation probe if speculation is off). It is kept if its acceptance is higher than that of the previous drafter just before the swap; otherwise the previous drafter is restored and collection is disabled until the next shift. TIDE leaves the averaging weights, the margin, and the round size unspecified, so these values are ours. TIDE evaluates candidates offline on held-out samples of the round; the frozen trainer has no evaluation path, so we evaluate live, and we declare an evaluation inconclusive, keeping the new drafter, when the traffic label changed within 8\,s before the swap or during the measurement, because the two drafters would then be measured on different traffic. The training rule never uses the label otherwise. \pol{TIDE} was added after the 72-run matrix, on the same frozen checkpoint: its controller and a wrapper that makes the frozen harness start it are new files (\cref{tab:manifest}); no frozen file was changed.
 
 \FloatBarrier
 \section{Additional Results}\label{app:extra}
@@ -181,12 +206,30 @@ Policy & Speculation & Training & Information used\\
 \input{tables/app_full_runs.tex}
 \end{table}
 
+\paragraph{Latency.}\label{app:latency} Table~\ref{tab:latency} gives TPOT per phase. In phase A2, \pol{Full} stays close to \pol{Static} on Qwen3-8B (\nv{code.full.a2}\%, \nv{zh.full.a2}\%) because it keeps training in the slack, whereas \pol{Informed}, which has stopped training and kept its adapted drafter, changes A2 TPOT by \nv{code.informed.a2}\% and \nv{zh.informed.a2}\%. On the MoE target the calibration contains no chat learning curve, so \pol{Full} never trains in the chat phases, and its code-adapted drafter changes A2 TPOT by \nv{moe.full.a2}\% (\pol{Informed}: \nv{moe.informed.a2}\%).
+
 \begin{table}[!htbp]
 \caption{TPOT in milliseconds (means over three runs): median in the light chat phases A1 and A2, and 99th percentile in the saturated phase B.}
 \label{tab:latency}
 \centering\small
 \input{tables/tab_latency.tex}
 \end{table}
+
+\IfFileExists{tables/tab_tide.tex}{\begin{table}[!htbp]
+\caption{What \pol{TIDE} did (means over three runs): speculation-on and training shares of phase B, mean duty cycle in B, evaluated rounds (kept, inconclusive, rejected), drift triggers, and tokens trained over the whole run.}
+\label{tab:tide}
+\centering\small\setlength{\tabcolsep}{4pt}
+\input{tables/tab_tide.tex}
+\end{table}}{}
+
+\IfFileExists{tables/app_tidevar.tex}{\paragraph{Sensitivity of \pol{TIDE}.}\label{app:tidevar} TIDE leaves its round size and drift margin open (\cref{app:policies}). We reran \pol{TIDE} with rounds of \nv{tv.round} requests, four times larger, and a drift margin of \nv{tv.eps}, three times larger, everything else unchanged, on the same checkpoint, prompts, and seeds; the interference scan of \cref{app:rerun} flags \nv{tv.scan.flagged} of these nine runs. On Chinese the larger margin removes the drift triggers (\nv{zh.tv.drift} per run instead of \nv{zh.tide.drift}), but each larger round still raises acceptance a little, so the keep-if-better test keeps training going for \nv{zh.tv.trainB}\% of phase B, and \pol{Full} stays ahead in every repetition (\nv{zh.full_vs_tv.min} to \nv{zh.full_vs_tv.max}\%). On the code scenarios the larger rounds bring \pol{TIDE} to within \nv{code.full_vs_tv}\% (Qwen3-8B) and \nv{moe.full_vs_tv}\% (MoE) of \pol{Full}. Its worst case over the three scenarios becomes \nv{tv.worst} of the best policy, against \nv{full.worst} for \pol{Full} and \nv{switch.worst} for \pol{Switch} (\cref{tab:tidevar}).
+
+\begin{table}[!htbp]
+\caption{\pol{TIDE} with its default setting (rounds of 200 requests, drift margin 0.1) and with rounds of \nv{tv.round} requests and margin \nv{tv.eps} (means over three runs): phase-B throughput, paired difference of \pol{Full} against it, share of phase B spent training, evaluated rounds (kept, inconclusive, rejected), and drift triggers.}
+\label{tab:tidevar}
+\centering\small\setlength{\tabcolsep}{4pt}
+\input{tables/app_tidevar.tex}
+\end{table}}{}
 
 \begin{table}[!htbp]
 \caption{Costs of the mechanisms, measured inside the frozen runs.}
@@ -201,6 +244,8 @@ Policy & Speculation & Training & Information used\\
 \paragraph{Model.} The simulator (\texttt{sched/sim.py}) advances in 1\,s steps on one GPU. Arrivals of the current domain set the operating concurrency $C$ by solving $\Theta(C)=$ demand, where $\Theta$ includes the frontier gain when speculation is on and the factor $1-\kappa(C)\,d$ when the trainer runs; demand beyond the capacity at $C{=}256$ accumulates in a queue. TPOT is the step time divided by the frontier gain and by $1-\kappa(C)\,d$. Served requests feed a training buffer; training at duty $d$ consumes tokens at rate $r\,d$ and moves acceptance along the domain's learning curve, with the measured fraction transferring to chat. Goodput counts output tokens served in seconds whose TPOT and queueing delay meet the SLO. The simulator and the calibration file were frozen before the validation (hashes in \cref{tab:manifest}).
 
 \paragraph{Workloads.} V1 replays BurstGPT \citep{wang2024burstgpt} chat logs on days 4, 6, 8, 12, 16, and 20 and API logs on days 15, 21, and 22 (development had used day 2 and day 10 only), each for 24\,h and scaled so that the 95th-percentile demand is 0.6, 0.8, or 1.0 times capacity, and the Azure 2023 chat and code traces \citep{patel2024splitwise} for one hour at scales 0.6--1.2. V2 draws 60 bursts: a chat, code, or function-calling phase, followed by a code, SQL, or function-calling burst at 1.0, 1.05, or 1.2 times capacity lasting 5, 10, 20, 60, 180, or 600\,s, and a recovery phase. V3 draws 40 regimes in which traffic switches to Chinese at 128--256 concurrent requests or 1.1 times capacity for 600--1{,}800\,s. V4 draws 20 scenarios with a calm phase of 120--900\,s, a moderate phase, and a 600\,s surge, each at seven surge levels from 0.9 to 1.2 times capacity.
+
+\paragraph{Training volume and horizon.} The controller trains on \nv{v1.cmtrain.min}--\nv{v1.cmtrain.max}M tokens per trace window, whereas \pol{OSD} trains on up to \nv{v1.osdtrain.max}M. Replacing the horizon forecast with the true remaining length of the regime changes the outcome in \nv{hz.diff} of \nv{hz.total} cases, so the forecast barely matters in these workloads.
 
 \begin{table}[!htbp]
 \caption{Pre-declared criteria of the frozen-simulator validation and their outcomes.}

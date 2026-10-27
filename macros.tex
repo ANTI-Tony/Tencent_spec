@@ -16,6 +16,13 @@
 \usepackage{placeins}
 \usepackage[capitalize,noabbrev]{cleveref}
 
+% pages that hold only floats (appendix tables): stack from the top with fixed gaps instead of spreading them out
+\makeatletter
+\setlength{\@fptop}{0pt}
+\setlength{\@fpsep}{14pt plus 4pt}
+\setlength{\@fpbot}{0pt plus 1fil}
+\makeatother
+
 \definecolor{resultgray}{gray}{0.88}
 \definecolor{resultgraylight}{gray}{0.93}
 

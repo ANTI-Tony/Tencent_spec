@@ -4,10 +4,10 @@
 Mechanism & Measurement & Result\\
 \midrule
 Feature export + trainer memory reserve & Production vs.\ static speculation, saturated throughput & 8B code 2.2\%, 8B Chinese 1.8\%, MoE code 1.0\% \\
-Runtime-off state vs.\ no drafter & Switch only vs.\ plain decoding, saturated throughput & 8B code $-5.5$\%, 8B Chinese $-4.2$\% \\
-Drafter hot swap (8B) & 114 swaps in the frozen runs & median 0.72\,s, range 0.63--1.00\,s \\
-Drafter hot swap (MoE) & 51 swaps in the frozen runs & median 0.31\,s, range 0.24--0.63\,s \\
-Speculation switch & 36 switches, RPC round trip & median 22\,ms, max.\ 57\,ms \\
+Runtime-off state vs.\ no drafter & Switch only vs.\ plain decoding, saturated throughput & 8B code $-4.4$\%, 8B Chinese $-3.1$\% \\
+Drafter hot swap (8B) & 181 swaps in the frozen runs & median 0.71\,s, range 0.33--1.58\,s \\
+Drafter hot swap (MoE) & 70 swaps in the frozen runs & median 0.31\,s, range 0.21--0.76\,s \\
+Speculation switch & 74 switches, RPC round trip & median 22\,ms, max.\ 66\,ms \\
 Training data used (full controller) & Requests consumed by the trainer, of 16{,}400 served per run & 8B code 1{,}746 (11\%), 8B Chinese 849 (5\%), MoE code 2{,}648 (16\%) \\
 \bottomrule
 \end{tabularx}
