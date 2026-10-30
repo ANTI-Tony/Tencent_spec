@@ -27,7 +27,8 @@ Here $\tau(d)=n/\min(rd,\rho)$ is the training time when training data become av
 
 \begin{figure*}[t]
 \centering
-\input{figures/fig2_controller.tex}
+\includegraphics[width=\linewidth, trim={0 8pt 0 0}, clip]{figures/fig2.pdf}
+\captionsetup{skip=2pt}
 \caption{The control loop. Each second the controller combines engine and trainer measurements with the frozen calibration and applies three tests: whether the current drafter beats plain decoding (\cref{eq:switch}), whether training can still pay (structural ceiling, ceiling, convergence), and how much to train (SLO slack, or the value of \cref{eq:value} under saturation). Its outputs are a speculation switch, the trainer's duty cycle, and drafter exports that are hot-swapped into the running engine.}
 \label{fig:controller}
 \end{figure*}
