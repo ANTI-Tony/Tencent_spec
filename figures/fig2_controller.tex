@@ -7,7 +7,7 @@
 ]
 % controller (right)
 \node[box=8.6cm, fill=black!4] (in) {%
-  {\bfseries Inputs every 1\,s:} running requests $C$, queue, acceptance $\hat a$, TPOT, trainer progress, domain label $\ell$\\
+  {\bfseries Inputs every 1\,s:} running requests $C$, queue, acceptance $\hat a$, trainer progress, domain label $\ell$\\
   {\bfseries Frozen calibration:} frontier $\Ghat_\ell(a,C)$, ceiling $\amax_\ell$, learning curve $a_\ell(N)$, step times, $\kappa(C)$, $r$};
 \node[box=8.6cm, fill=blue!6, below=of in] (r1) {%
   {\bfseries 1. Speculate?}\enspace $z=\mathbf{1}[\Ghat_\ell(\hat a,C)>1]$ with the SLO clause of Eq.~\ref{eq:switch}; switch after three agreeing ticks, at most every 10\,s; 8\,s probe after each swap};

@@ -1,0 +1,32 @@
+\section{Second Engine: SGLang}\label{app:sglang}
+
+\paragraph{Port.} We reimplemented the three engine extensions of \cref{sec:system} on SGLang 0.5.10 \citep{zheng2024sglang}, as a runtime patch of its default EAGLE-3 path, which runs without SGLang's overlap scheduler. The live tap writes the records of \cref{sec:system} to the same ring buffer, so the trainer is unchanged; its rows are the prefill chunks, the accepted prefix of every verification, and the input token of every step with speculation off. A drafter swap copies the exported weights in place, skipping the embedding that the drafter shares with the target. With speculation off, a decode step runs the target on a second set of CUDA graphs, captured at start-up for plain decoding, with the bookkeeping of a verification that accepted no draft. As in vLLM, the drafter does not run while speculation is off; the first speculative step afterwards refreshes the drafter's inputs with one pass over every request's last committed position. A metrics endpoint with vLLM's names and an RPC endpoint let the harness, benchmark client, controller, trainer, prompt files, and seeds of the vLLM checkpoint run unchanged, with identical hashes.
+
+\paragraph{Checks.} Before calibrating we checked the port on both targets. Greedy outputs with speculation on and off agreed on \nv{sgl.8b.greedy} prompts for Qwen3-8B and \nv{sgl.moe.greedy} for the MoE target. Toggling speculation every 0.5\,s under load (\nv{sgl.8b.flips} and \nv{sgl.moe.flips} toggles) completed every request with exact token counts. Swapping drafters moved Qwen3-8B's acceptance on code from \nv{sgl.8b.acc.factory} (factory) to \nv{sgl.8b.acc.trained} (a code drafter from the vLLM runs) and \nv{sgl.8b.acc.zero} (its input layer zeroed), and back to \nv{sgl.8b.acc.back}, without changing the target's output. The exported hidden states match those of Hugging Face Transformers row by row, with cosine similarity at least \nv{sgl.8b.cosmin} for Qwen3-8B and \nv{sgl.moe.cosmin} for the MoE target.
+
+\begin{table}[t]
+\caption{SGLang output throughput (tokens/s) on code prompts: one speculative server with speculation on (acceptance in parentheses) and switched off, and a server without a drafter with and without SGLang's overlap scheduler. --: not measured.}
+\label{tab:sgl_speed}
+\centering\small
+\IfFileExists{tables/app_sgl_speed.tex}{\input{tables/app_sgl_speed}}{}
+\end{table}
+
+\paragraph{A step without speculation costs more than in vLLM.} In vLLM, switching speculation off on Qwen3-8B code at concurrency 256 raised throughput by \nv{vllm.off_vs_on.c256}\% over speculating, and in the frozen matrix its speculation-off state was \nv{zh.switch_vs_plain.abs}--\nv{code.switch_vs_plain.abs}\% slower than plain decoding (\cref{tab:mechanisms}). In SGLang, a step with speculation switched off is \nv{sgl.off_vs_plain.c256}\% slower than a server without a drafter (Table~\ref{tab:sgl_speed}). About \nv{sgl.nooverlap.c256} points come from the overlap scheduler, which SGLang's speculative path does not use (a plain server without it is that much slower), and \nv{sgl.port.c256} points from the bookkeeping of the speculative path. Switching off therefore loses \nv{sgl.on_vs_off.c256}\% against speculating on Qwen3-8B code, while a plain server would gain \nv{sgl.plain_vs_on.c256}\%. A first version that kept the drafter current at every step with speculation off was \nv{sgl.v1off_vs_plain.c256}\% slower than a plain server; we replaced it before calibrating.
+
+\paragraph{Calibration and checkpoint.} SGLang was calibrated with the same scripts and prompts (load sweep, interference at duty 0.1 to 1, frontier with the same drafter checkpoints). Plain decoding in the calibration is the speculative server with speculation switched off, since that is what the controller obtains by setting $z{=}0$; the plain server is the \pol{Plain} baseline. The learning curves are those of \cref{sec:measure}, since drafters and prompts are the same. vLLM's memory utilisation $u$, which caps the whole server, maps to SGLang's static fraction $u$ minus the server's measured non-static memory, so the server's peak footprint and the trainer's reserve are those of the vLLM runs. The SGLang runs use their own checkpoint, frozen after calibration and before the first run (Table~\ref{tab:sgl_manifest}).
+
+\begin{table}[t]
+\caption{SGLang: phase-B throughput change relative to \pol{Static} (paired mean $\pm$ standard deviation over three repetitions; ratio to the best policy of the scenario in parentheses; best policy in bold). Last column: the worst ratio across scenarios.}
+\label{tab:sgl_main}
+\centering\small
+\IfFileExists{tables/app_sgl_main.tex}{\input{tables/app_sgl_main}}{}
+\end{table}
+
+\paragraph{Results.} Table~\ref{tab:sgl_main} gives the SGLang matrix. Relative to the best other policy that keeps a drafter loaded, \pol{Full} is \nv{sgl.code.full_vs_loaded}\% on Qwen3-8B code (\nv{sgl.code.loaded}), \nv{sgl.zh.full_vs_loaded}\% on Chinese (\nv{sgl.zh.loaded}), and \nv{sgl.moe.full_vs_loaded}\% on the MoE target (\nv{sgl.moe.loaded}). On Chinese, \pol{Switch} and \pol{Full} turn speculation off within seconds of saturation, but the server they run on is the speculative one, \nv{sgl.off_vs_plain.c256}\% slower than a plain server; on Qwen3-8B code, adapted drafters bring \pol{Full} and \pol{TIDE} level with \pol{Plain}; on the MoE target, plain decoding loses \nv{sgl.moe.plain.abs}\% to static speculation, as in vLLM. The interference scan of \cref{app:rerun} flags none of the \nv{sgl.n.runs} runs. Its speculation-off reference pools the plain server and the speculative server with speculation off, which in SGLang differ in speed, so it scores \pol{Plain} runs high but cannot hide a slowdown of the others. Repetition 3 of \pol{Switch} and of \pol{Full} on Chinese ran back to back on one node and are 4--8\% slower over the whole of phase B than their other repetitions, without a 60-s drop below the scan's threshold; they stay in the table, and they account for most of \pol{Full}'s spread on Chinese.
+
+\begin{table}[t]
+\caption{SGLang checkpoint: hashes of the port and its calibration (the files reused from the vLLM checkpoint have the hashes of Table~\ref{tab:manifest}).}
+\label{tab:sgl_manifest}
+\centering\small
+\IfFileExists{tables/app_sgl_manifest.tex}{\input{tables/app_sgl_manifest}}{}
+\end{table}

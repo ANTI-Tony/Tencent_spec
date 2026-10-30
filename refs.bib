@@ -1,4 +1,5 @@
-% Every entry below was checked against arXiv metadata (export.arxiv.org API) on 2026-10-25.
+% Every entry below was checked on 2026-10-28 against arXiv metadata (export.arxiv.org API) and, where a paper
+% was accepted, the venue's proceedings or program; dataset and model entries against their hosting pages.
 
 @inproceedings{leviathan2023fast,
   title     = {Fast Inference from Transformers via Speculative Decoding},
@@ -42,11 +43,18 @@
   year      = {2024}
 }
 
-@article{li2025eagle3,
-  title   = {{EAGLE-3}: Scaling up Inference Acceleration of Large Language Models via Training-Time Test},
-  author  = {Li, Yuhui and Wei, Fangyun and Zhang, Chao and Zhang, Hongyang},
-  journal = {arXiv preprint arXiv:2503.01840},
-  year    = {2025}
+@inproceedings{li2025eagle3,
+  title     = {{EAGLE-3}: Scaling up Inference Acceleration of Large Language Models via Training-Time Test},
+  author    = {Li, Yuhui and Wei, Fangyun and Zhang, Chao and Zhang, Hongyang},
+  booktitle = {Advances in Neural Information Processing Systems (NeurIPS)},
+  year      = {2025}
+}
+
+@inproceedings{sadhukhan2025magicdec,
+  title     = {{MagicDec}: Breaking the Latency-Throughput Tradeoff for Long Context Generation with Speculative Decoding},
+  author    = {Sadhukhan, Ranajoy and Chen, Jian and Chen, Zhuoming and Tiwari, Vashisth and Lai, Ruihang and Shi, Jinyuan and Yen, Ian En-Hsu and May, Avner and Chen, Tianqi and Chen, Beidi},
+  booktitle = {International Conference on Learning Representations (ICLR)},
+  year      = {2025}
 }
 
 @inproceedings{huang2025moesd,
@@ -65,7 +73,7 @@
 
 @article{liu2024turbospec,
   title   = {{TurboSpec}: Closed-loop Speculation Control System for Optimizing {LLM} Serving Goodput},
-  author  = {Liu, Xiaoxuan and Park, Jongseok and Hu, Langxiang and Kwon, Woosuk and Li, Zhuohan and Zhang, Chen and Du, Kuntai and Mo, Xiangxi and You, Kaichao and Cheung, Alvin and Deng, Zhijie and Stoica, Ion and Zhang, Hao},
+  author  = {Liu, Xiaoxuan and Park, Jongseok and Hu, Lanxiang and Kwon, Woosuk and Li, Zhuohan and Zhang, Chen and Du, Kuntai and Mo, Xiangxi and You, Kaichao and Cheung, Alvin and Deng, Zhijie and Stoica, Ion and Zhang, Hao},
   journal = {arXiv preprint arXiv:2406.14066},
   year    = {2024}
 }
@@ -98,10 +106,24 @@
   year      = {2026}
 }
 
-@article{wang2026aurora,
-  title   = {When {RL} Meets Adaptive Speculative Training: A Unified Training-Serving System},
-  author  = {Wang, Junxiong and Bie, Fengxiang and Li, Jisen and Zhou, Zhongzhu and Shao, Zelei and Wang, Yubo and Liu, Yinghui and Wu, Qingyang and May, Avner and Yanamandra, Sri and Zhang, Ce and Dao, Tri and Liang, Percy and Athiwaratkun, Ben and Song, Shuaiwen Leon and Xu, Chenfeng and Wu, Xiaoxia},
-  journal = {arXiv preprint arXiv:2602.06932},
+@inproceedings{wang2026aurora,
+  title     = {When {RL} Meets Adaptive Speculative Training: A Unified Training-Serving System},
+  author    = {Wang, Junxiong and Bie, Fengxiang and Li, Jisen and Zhou, Zhongzhu and Shao, Zelei and Wang, Yubo and Liu, Yinghui and Wu, Qingyang and May, Avner and Yanamandra, Sri and Zhang, Ce and Dao, Tri and Liang, Percy and Athiwaratkun, Ben and Song, Shuaiwen Leon and Xu, Chenfeng and Wu, Xiaoxia},
+  booktitle = {Proceedings of the 43rd International Conference on Machine Learning (ICML)},
+  year      = {2026}
+}
+
+@inproceedings{liu2026notabandit,
+  title     = {{Not-a-Bandit}: Provably No-Regret Drafter Selection in Speculative Decoding for {LLMs}},
+  author    = {Liu, Hongyi and Huang, Jiaji and Jia, Zhen and Park, Youngsuk and Wang, Yu-Xiang},
+  booktitle = {International Conference on Learning Representations (ICLR)},
+  year      = {2026}
+}
+
+@article{wang2026cotraining,
+  title   = {Online Draft Co-Training for Speculative Decoding in Large-Scale, Long-Context {RL} Post-Training},
+  author  = {Wang, Zili and Qiu, Zhaopeng and Zhang, Yuekai and Yu, Shuang and Lai, Junjie},
+  journal = {arXiv preprint arXiv:2609.07108},
   year    = {2026}
 }
 
@@ -127,6 +149,13 @@
   year      = {2023}
 }
 
+@inproceedings{zheng2024sglang,
+  title     = {{SGLang}: Efficient Execution of Structured Language Model Programs},
+  author    = {Zheng, Lianmin and Yin, Liangsheng and Xie, Zhiqiang and Sun, Chuyue and Huang, Jeff and Yu, Cody Hao and Cao, Shiyi and Kozyrakis, Christos and Stoica, Ion and Gonzalez, Joseph E. and Barrett, Clark and Sheng, Ying},
+  booktitle = {Advances in Neural Information Processing Systems (NeurIPS)},
+  year      = {2024}
+}
+
 @article{yang2025qwen3,
   title   = {Qwen3 Technical Report},
   author  = {Yang, An and Li, Anfeng and Yang, Baosong and Zhang, Beichen and Hui, Binyuan and Zheng, Bo and Yu, Bowen and others},
@@ -148,11 +177,11 @@
   year      = {2024}
 }
 
-@article{wang2024burstgpt,
-  title   = {{BurstGPT}: A Real-world Workload Dataset to Optimize {LLM} Serving Systems},
+@inproceedings{wang2024burstgpt,
+  title     = {{BurstGPT}: A Real-world Workload Dataset to Optimize {LLM} Serving Systems},
   author  = {Wang, Yuxin and Chen, Yuhan and Li, Zeyu and Kang, Xueze and Fang, Yuchu and Zhou, Yeju and Zheng, Yang and Tang, Zhenheng and He, Xin and Guo, Rui and Wang, Xin and Wang, Qiang and Zhou, Amelie Chi and Chu, Xiaowen},
-  journal = {arXiv preprint arXiv:2401.17644},
-  year    = {2024}
+  booktitle = {Proceedings of the 31st ACM SIGKDD Conference on Knowledge Discovery and Data Mining (KDD)},
+  year      = {2025}
 }
 
 @inproceedings{ding2023ultrachat,
