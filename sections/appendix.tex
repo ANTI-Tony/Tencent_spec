@@ -251,6 +251,13 @@ Policy & Speculation & Training & Information used\\
 
 \paragraph{Training volume and horizon.} The controller trains on \nv{v1.cmtrain.min}--\nv{v1.cmtrain.max}M tokens per trace window, whereas \pol{OSD} trains on up to \nv{v1.osdtrain.max}M. Replacing the horizon forecast with the true remaining length of the regime changes the outcome in \nv{hz.diff} of \nv{hz.total} cases, so the forecast barely matters in these workloads.
 
+\begin{figure*}[!htbp]
+\centering
+\includegraphics[width=\linewidth]{figures/fig5_heldout.pdf}
+\caption{Frozen-simulator validation on unseen workloads. (a) Goodput of the controller relative to the best of five simple policies in each of \nv{v1.n} trace windows (sorted). (b) Median goodput relative to \pol{SpecAlways} for bursts of a new domain, by burst length; labels give the share of strict wins. (c) Largest surge, in multiples of plain-decoding capacity, served without SLO violation in 20 scenarios (dots) and their mean (bars).}
+\label{fig:heldout}
+\end{figure*}
+
 \begin{table}[!htbp]
 \caption{Pre-declared criteria of the frozen-simulator validation and their outcomes.}
 \label{tab:heldout}
