@@ -6,7 +6,6 @@
 \begin{equation}
 \Ghat_\ell(a,C)=\alpha_\ell(C)\,a+\beta_\ell(C),\qquad a^{*}_\ell(C)=\frac{1-\beta_\ell(C)}{\alpha_\ell(C)}.\label{eq:frontier}
 \end{equation}
-As the drafter trains, its operating point moves along the acceptance axis of this frontier.
 
 \paragraph{Calibration.} Before deployment we measure, once per target, the plain and speculative step times and plain throughput as functions of $C$, the interference coefficient $\kappa(C)$ (serving throughput falls by $\kappa(C)\,d$ at duty $d$), and the trainer's token rate $r$ at full duty; and once per domain, the frontier of \cref{eq:frontier} and the learning curve $a_\ell(N)$, the acceptance after learning from $N$ requests (\cref{sec:measure,app:calibration}). From these the controller predicts the throughput $\Theta(a,z,C)$ and the TPOT for any acceptance, speculation state, and duty (\cref{app:controller}). It never trains on a domain without a learning curve.
 
@@ -25,11 +24,9 @@ V(d)={}&\big[\Theta^{\star}(a^{\dagger})-\Theta(\hat a)\big]\,\max\!\big(0,\wide
 &-\Theta(\hat a)\,\kappa(C)\,b(d)\,\tau(d).
 \end{aligned}\label{eq:value}
 \end{equation}
-Here $\tau(d)=n/\min(rd,\rho)$ is the training time when training data become available at rate $\rho$, $b(d)=\min(d,\rho/r)$ is the trainer's actual busy fraction, $\Theta^{\star}$ is the better of speculation on and off, and $\widehat H$ is the forecast remaining length of the regime. The first term is the gain once the improved drafter is in place, the second the loss while it trains. The controller trains at $\arg\max_d V(d)$ if the maximum is positive and not at all otherwise. Not knowing when the regime will end, it forecasts $\widehat H$ as the regime's age so far, clipped to $[90,600]$\,s.
+Here $\tau(d)=n/\min(rd,\rho)$ is the training time at data rate $\rho$, $b(d)=\min(d,\rho/r)$ the trainer's busy fraction, $\Theta^{\star}$ the better of speculation on and off, and $\widehat H$ the forecast remaining regime length (its age so far, clipped to $[90,600]$\,s): the first term is the gain once the improved drafter is in place, the second the loss while it trains. The controller trains at $\arg\max_d V(d)$ if the maximum is positive and not at all otherwise.
 
-\paragraph{Export and swap.} The trainer exports a drafter after 100, 200, 400, \dots{} requests learned in the current regime, and each export is swapped in immediately. When the label changes, the trainer's buffer is flushed and the schedule restarts.
-
-\paragraph{What the controller assumes.} It needs the label and a per-domain calibration from a short profiling run, but neither the regime's end nor the right time to stop; its rules and constants (\cref{app:controller}) were fixed before the evaluation checkpoint was frozen and not changed afterwards.
+\paragraph{Export, swap, and assumptions.} The trainer exports a drafter after 100, 200, 400, \dots{} requests learned in the current regime, each swapped in immediately; a label change flushes the trainer's buffer and restarts the schedule. The controller needs the label and a per-domain calibration from a short profiling run, but neither the regime's end nor the right time to stop; its rules and constants (\cref{app:controller}) were fixed before the evaluation checkpoint was frozen and not changed afterwards.
 
 \begin{figure*}[t]
 \centering
