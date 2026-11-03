@@ -139,55 +139,236 @@ The calibration consists of four measurements, all on one H100 with vLLM 0.27.1 
 \end{algorithmic}
 \end{algorithm}
 
+
 \begin{table}[!htbp]
 \caption{Constants of the controller, as fixed in the frozen checkpoint.}
 \label{tab:constants}
 \centering\small
-\begin{tabular}{@{}ll@{}}
+
+\begingroup
+\renewcommand{\arraystretch}{1.18}
+\setlength{\tabcolsep}{4pt}
+
+\begin{tabularx}{\linewidth}{@{}
+  >{\raggedright\arraybackslash}p{0.32\linewidth}
+  >{\raggedright\arraybackslash}X
+  @{}}
 \toprule
-Constant & Value\\
+
+\textbf{Constant} & \textbf{Value} \\
 \midrule
-Control period & 1\,s\\
-SLO $\Tslo$ & $2\times$ single-request decode time (\nv{slo.m1}\,ms Qwen3-8B, \nv{slo.m2}\,ms MoE)\\
-Duty levels $\mathcal D$ & $\{0, 0.1, 0.25, 0.5, 1\}$\\
-Slack rule margin & predicted TPOT $\le0.9\,\Tslo$\\
-Saturation & queue non-empty, or $C\ge0.95\times256$\\
-Duty cap under saturation & 0.5\\
-Training target $a^{\dagger}$ & $\hat a+0.8\,(\amax_\ell-\hat a)$\\
-Data availability $\rho$ & arrivals plus buffered tokens spread over 10\,s\\
-Horizon forecast $\widehat H$ & age of the regime, clipped to $[90,600]$\,s\\
-Stop at ceiling & $\amax_\ell-\hat a\le0.02$\\
-Stop on convergence & last swap raised $\hat a$ by $<0.02$ (measured $\ge8$\,s after the swap)\\
-Speculation switch & 3 agreeing ticks, $\ge10$\,s between switches, 8\,s probe after a swap\\
-Export schedule & after 100 requests in the regime, then doubling gaps; $\ge5$\,s between requests\\
-Acceptance estimate & moving average with weight 0.3 on the last second (if $>20$ drafts)\\
+
+% ===== Serving and speculation control =====
+\rowcolor{tabGroup}
+\multicolumn{2}{@{}l@{}}{%
+  \cellcolor{tabGroup}
+  \textbf{\footnotesize Serving and Speculation Control}
+} \\
+
+Control period
+& 1\,s \\
+
+SLO $\Tslo$
+& $2\times$ single-request decode time
+  (\nv{slo.m1}\,ms Qwen3-8B,
+  \nv{slo.m2}\,ms MoE) \\
+
+Saturation
+& Queue non-empty, or
+  $C\ge0.95\times256$ \\
+
+\rowcolor{tabLoad}
+Speculation switch
+& 3 agreeing ticks,
+  $\ge10$\,s between switches,
+  8\,s probe after a swap \\
+
+Acceptance estimate
+& Moving average with weight 0.3
+  on the last second
+  (if $>20$ drafts) \\
+
+\addlinespace[3pt]
+
+% ===== Training allocation and forecasting =====
+\rowcolor{tabGroup}
+\multicolumn{2}{@{}l@{}}{%
+  \cellcolor{tabGroup}
+  \textbf{\footnotesize Training Allocation and Forecasting}
+} \\
+
+Duty levels $\mathcal D$
+& $\{0, 0.1, 0.25, 0.5, 1\}$ \\
+
+Slack rule margin
+& Predicted TPOT $\le0.9\,\Tslo$ \\
+
+\rowcolor{tabLoad}
+Duty cap under saturation
+& \textbf{0.5} \\
+
+Training target $a^{\dagger}$
+& $\hat a+0.8\,(\amax_\ell-\hat a)$ \\
+
+Data availability $\rho$
+& Arrivals plus buffered tokens
+  spread over 10\,s \\
+
+\rowcolor{tabLoad}
+Horizon forecast $\widehat H$
+& Age of the regime,
+  clipped to $[90,600]$\,s \\
+
+\addlinespace[3pt]
+
+% ===== Training termination and updates =====
+\rowcolor{tabGroup}
+\multicolumn{2}{@{}l@{}}{%
+  \cellcolor{tabGroup}
+  \textbf{\footnotesize Training Termination and Updates}
+} \\
+
+Stop at ceiling
+& $\amax_\ell-\hat a\le0.02$ \\
+
+Stop on convergence
+& Last swap raised $\hat a$ by
+  $<0.02$ (measured $\ge8$\,s
+  after the swap) \\
+
+Export schedule
+& After 100 requests in the regime,
+  then doubling gaps;
+  $\ge5$\,s between requests \\
+
 \bottomrule
-\end{tabular}
+\end{tabularx}
+\endgroup
 \end{table}
+
 
 \FloatBarrier
 \section{Baseline Definitions and Fairness}\label{app:policies}
 
+
 \begin{table}[!htbp]
-\caption{The policies of the frozen evaluation. All use the factory drafter at the start of each run.}
+\caption{Policies in the frozen evaluation.
+All policies that load a drafter start from the
+same factory checkpoint.}
 \label{tab:policies}
-\centering\small
-\begin{tabularx}{\linewidth}{@{}l>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X@{}}
+\centering
+\small
+
+\begingroup
+\renewcommand{\arraystretch}{1.18}
+\setlength{\tabcolsep}{3.5pt}
+
+\begin{tabularx}{\linewidth}{@{}
+    l
+    >{\hsize=.72\hsize\raggedright\arraybackslash}X
+    >{\hsize=1.48\hsize\raggedright\arraybackslash}X
+    >{\hsize=.80\hsize\raggedright\arraybackslash}X
+    @{}}
 \toprule
-Policy & Speculation & Training & Information used\\
+
+\textbf{Policy}
+& \textbf{Speculation}
+& \textbf{Training}
+& \textbf{Information Used} \\
+
 \midrule
-\pol{Production} & always on & none & none (no export, no memory reserve)\\
-\pol{Static} & always on & none & none\\
-\pol{Plain} & no drafter loaded & none & none\\
-\pol{Switch} & \cref{eq:switch} & none & label, frontier\\
-\pol{Threshold} & off whenever saturated & duty 0.5 whenever predicted TPOT is within the SLO & load threshold\\
-\pol{TIDE} & \cref{eq:switch} & duty 0.5 while collection is on; rounds of 200 requests, keep-if-better, roll back and stop otherwise; re-enabled by acceptance drift & label (frontier only), frontier\\
-\pol{Always} & always on & duty 0.5 from the first request; swaps after 100, 200, 400, \dots{} requests & none\\
-\pol{Informed} & always on & duty 0.5 from the start of phase B until 800 requests are learned; swaps at 100, 200, 400, 800 & start of phase B; stopping point chosen from the learning curves\\
-\pol{Full} & \cref{eq:switch} & \cref{sec:method} & label, frontier, learning curve\\
+
+% ===== Serving baselines =====
+\rowcolor{tabGroup}
+\multicolumn{4}{@{}l@{}}{
+  \textbf{\footnotesize Serving Baselines}
+} \\
+
+\pol{Production}
+& Always on
+& None
+& None (no export, no memory reserve) \\
+
+\pol{Static}
+& Always on
+& None
+& None \\
+
+\pol{Plain}
+& No drafter loaded
+& None
+& None \\
+
+\addlinespace[3pt]
+
+% ===== Reactive controllers =====
+\rowcolor{tabGroup}
+\multicolumn{4}{@{}l@{}}{
+  \textbf{\footnotesize Reactive Controllers}
+} \\
+
+\pol{Switch}
+& \cref{eq:switch}
+& None
+& Label, frontier \\
+
+\pol{Threshold}
+& Off whenever saturated
+& Duty 0.5 whenever predicted TPOT
+  is within the SLO
+& Load threshold \\
+
+\pol{TIDE}
+& \cref{eq:switch}
+& Duty 0.5 while collection is on;
+  rounds of 200 requests;
+  keep-if-better, roll back and stop
+  otherwise; re-enabled by
+  acceptance drift
+& Label (frontier only), frontier \\
+
+\addlinespace[3pt]
+
+% ===== Training schedules =====
+\rowcolor{tabGroup}
+\multicolumn{4}{@{}l@{}}{
+  \textbf{\footnotesize Training Schedules}
+} \\
+
+\pol{Always}
+& Always on
+& Duty 0.5 from the first request;
+  swaps after 100, 200, 400,
+  \dots{} requests
+& None \\
+
+\cellcolor{tabOracle}\pol{Informed}
+& Always on
+& Duty 0.5 from the start of phase B
+  until 800 requests are learned;
+  swaps at 100, 200, 400, 800
+& Start of phase B; stopping point
+  chosen from the learning curves \\
+
+\addlinespace[3pt]
+
+% ===== Proposed method =====
+\rowcolor{tabGroup}
+\multicolumn{4}{@{}l@{}}{
+  \textbf{\footnotesize Proposed Method}
+} \\
+
+\rowcolor{tabFull}
+\pol{Full}
+& \cref{eq:switch}
+& \cref{sec:method}
+& Label, frontier, learning curve \\
+
 \bottomrule
 \end{tabularx}
+\endgroup
 \end{table}
+
 
 \paragraph{Fairness.} All policies except \pol{Production} run the same engine configuration, memory reserve, and export path, serve the same prompt sequence per repetition with the same trainer seed, and start from the factory drafter; they differ only in the information they may use (last column of \cref{tab:policies}) and in what they do with it. \pol{Production} has neither export path nor reserve, so its difference from \pol{Static} is the cost of the infrastructure (\cref{tab:mechanisms}). \pol{Informed} uses information no deployable policy has, the start of phase B and a stopping point read off the learning curves, and is a reference rather than a competitor; \pol{Always} and \pol{Threshold} use less information than \pol{Full}; \pol{Switch} and \pol{TIDE} use the same frontier as \pol{Full} but not the learning curve. The constants of every policy were fixed before the freeze (\cref{sec:limitations}).
 
