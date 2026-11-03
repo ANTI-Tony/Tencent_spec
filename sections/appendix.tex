@@ -1,7 +1,7 @@
 \FloatBarrier
-\section{Frozen Checkpoint and Configuration}\label{app:manifest}
+\section{Reproducibility and Frozen Evaluation}\label{app:manifest}
 
-All results of \cref{sec:evaluation} come from one checkpoint frozen before the first run. Table~\ref{tab:manifest} lists the hashes recorded in its manifest; the local copies of the controller, trainer, harness, calibration files, and simulator were checked against them when this paper's tables were generated. Every number in the paper is produced by one script from the run directories and the frozen files, not typed by hand.
+All results of \cref{sec:evaluation} come from one checkpoint frozen before the first run. Table~\ref{tab:manifest} lists the hashes recorded in its manifest; the local copies of the controller, trainer, harness, calibration files, and simulator were checked against them when this paper's tables were generated. Every number in the paper is produced by one script from the run directories and the frozen files, not typed by hand. Repetition $r\in\{1,2,3\}$ fixes the prompt order of every phase and the trainer's seed, so that the policies of one repetition serve the same request sequence; every run directory keeps the controller's per-second log, the trainer's log, the engine's metrics time line, and the benchmark output, from which every table is built.
 
 \begin{table}[!htbp]
 \caption{Hashes of the frozen checkpoint and of the files added later for \pol{TIDE} and its sensitivity check (first 16 hexadecimal digits of SHA-256).}
@@ -108,7 +108,9 @@ The calibration consists of four measurements, all on one H100 with vLLM 0.27.1 
 \end{table}
 
 \FloatBarrier
-\section{Controller Details}\label{app:controller}
+\section{Controller Algorithm and Configuration}\label{app:controller}
+
+\paragraph{Prediction model.} The controller predicts from the calibration file alone. With $\Theta_{\mathrm{plain}}(C)$, $T_{\mathrm{base}}(C)$, and $T_{\mathrm{spec}}(C)$ the measured plain throughput and the plain and speculative step times, interpolated in $\log_2 C$ between the calibrated loads, and $g=z\,\Ghat_\ell(a,C)+(1-z)$ the predicted gain of the current speculation state, it predicts the throughput $\Theta(a,z,C,d)=\Theta_{\mathrm{plain}}(C)\,g\,(1-\kappa(C)\,d)$ and the TPOT $\widehat T(a,z,C,d)=T_{\mathrm{base}}(C)/\big(g\,(1-\kappa(C)\,d)\big)$. For a domain without a frontier fit, $\Ghat$ falls back to the proportional form $a\,T_{\mathrm{base}}(C)/T_{\mathrm{spec}}(C)$. The learning curve $a_\ell(N)$ is interpolated in $\log(1+N)$ between the calibrated export points; its inverse gives the requests, and through the domain's mean tokens per request the tokens $n$, that separate $\hat a$ from a target acceptance. In the frozen runs the TPOT entering the rules is this prediction, not a measured latency. Algorithm~\ref{alg:controller} gives one control tick and \cref{tab:constants} the constants.
 
 \begin{algorithm}[!htbp]
 \caption{One control tick (every second).}
@@ -164,7 +166,7 @@ Acceptance estimate & moving average with weight 0.3 on the last second (if $>20
 \end{table}
 
 \FloatBarrier
-\section{Policies}\label{app:policies}
+\section{Baseline Definitions and Fairness}\label{app:policies}
 
 \begin{table}[!htbp]
 \caption{The policies of the frozen evaluation. All use the factory drafter at the start of each run.}
@@ -187,10 +189,19 @@ Policy & Speculation & Training & Information used\\
 \end{tabularx}
 \end{table}
 
+\paragraph{Fairness.} All policies except \pol{Production} run the same engine configuration, memory reserve, and export path, serve the same prompt sequence per repetition with the same trainer seed, and start from the factory drafter; they differ only in the information they may use (last column of \cref{tab:policies}) and in what they do with it. \pol{Production} has neither export path nor reserve, so its difference from \pol{Static} is the cost of the infrastructure (\cref{tab:mechanisms}). \pol{Informed} uses information no deployable policy has, the start of phase B and a stopping point read off the learning curves, and is a reference rather than a competitor; \pol{Always} and \pol{Threshold} use less information than \pol{Full}; \pol{Switch} and \pol{TIDE} use the same frontier as \pol{Full} but not the learning curve. The constants of every policy were fixed before the freeze (\cref{sec:limitations}).
+
 \paragraph{The TIDE-style baseline.} \pol{TIDE} reproduces Algorithm~1 of TIDE \citep{park2026tide} in the co-located setting. Its speculation rule is that of \pol{Switch}. Collection is enabled when serving starts. Two moving averages of the measured acceptance length, with weights 0.3 and 0.02 on the newest second and initialised from the first 10 measured seconds, detect a distribution shift when the short one falls more than 0.1 below the long one; a shift re-enables collection. While collection is enabled the trainer runs at duty 0.5, the duty of the other fixed-duty baselines (TIDE itself trains on separate GPUs). After every 200 requests learned the trainer exports a drafter, which is swapped in and measured for 8\,s (with a speculation probe if speculation is off). It is kept if its acceptance is higher than that of the previous drafter just before the swap; otherwise the previous drafter is restored and collection is disabled until the next shift. TIDE leaves the averaging weights, the margin, and the round size unspecified, so these values are ours. TIDE evaluates candidates offline on held-out samples of the round; the frozen trainer has no evaluation path, so we evaluate live, and we declare an evaluation inconclusive, keeping the new drafter, when the traffic label changed within 8\,s before the swap or during the measurement, because the two drafters would then be measured on different traffic. The training rule never uses the label otherwise. \pol{TIDE} was added after the 72-run matrix, on the same frozen checkpoint: its controller and a wrapper that makes the frozen harness start it are new files (\cref{tab:manifest}); no frozen file was changed.
 
 \FloatBarrier
-\section{Additional Results}\label{app:extra}
+\section{Detailed Serving Results and Decision Ablations}\label{app:extra}
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=\linewidth]{figures/fig4_policies.pdf}
+\caption{Phase-B throughput change relative to \pol{Static} per repetition (dots), with the paired mean and standard deviation (bars). The best policy in each scenario has a black outline. Prod.: \pol{Production}; Thresh.: \pol{Threshold}.}
+\label{fig:policies}
+\end{figure}
 
 \begin{table}[!htbp]
 \caption{Phase-B throughput (tok/s) of every run, the mean, and the coefficient of variation (CV) over the three repetitions.}
@@ -241,11 +252,14 @@ Policy & Speculation & Training & Information used\\
 \FloatBarrier
 \input{sections/app_ablation}
 
+\FloatBarrier
 \input{sections/app_mix}
 
+\FloatBarrier
 \input{sections/app_sglang}
 
-\section{Simulator and Held-out Validation}\label{app:sim}
+\FloatBarrier
+\section{Frozen-Simulator Validation}\label{app:sim}
 
 \paragraph{Model.} The simulator (\texttt{sched/sim.py}) advances in 1\,s steps on one GPU. Arrivals of the current domain set the operating concurrency $C$ by solving $\Theta(C)=$ demand, where $\Theta$ includes the frontier gain when speculation is on and the factor $1-\kappa(C)\,d$ when the trainer runs; demand beyond the capacity at $C{=}256$ accumulates in a queue. TPOT is the step time divided by the frontier gain and by $1-\kappa(C)\,d$. Served requests feed a training buffer; training at duty $d$ consumes tokens at rate $r\,d$ and moves acceptance along the domain's learning curve, with the measured fraction transferring to chat. Goodput counts output tokens served in seconds whose TPOT and queueing delay meet the SLO. The simulator and the calibration file were frozen before the validation (hashes in \cref{tab:manifest}).
 
