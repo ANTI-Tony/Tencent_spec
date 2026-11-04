@@ -1,5 +1,11 @@
 \section{Method}\label{sec:method}
-
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\linewidth]{figures/fig2.pdf}
+\captionsetup{skip=2pt}
+\caption{The control loop. Each second the controller combines engine and trainer measurements with the frozen calibration and applies three tests: whether the current drafter beats plain decoding (\cref{eq:switch}), whether training can still pay (structural ceiling, ceiling, convergence), and how much to train (SLO slack, or the value of \cref{eq:value} under saturation). Its outputs are a speculation switch, the trainer's duty cycle, and drafter exports that are hot-swapped into the running engine.}
+\label{fig:controller}
+\end{figure*}
 \paragraph{Setting and objective.} One GPU serves a target model with an EAGLE-3 drafter and also runs a trainer that updates a copy of the drafter from features exported during serving (\cref{sec:system}). The drafter proposes $k{=}3$ tokens per step and the target verifies them in one forward pass, so the acceptance length $a$, the number of tokens emitted per verification step, lies between 1 and 4. Every second the controller reads the running requests $C$, the queue, the smoothed acceptance length $\hat a$, and the trainer's progress. An operator-provided label $\ell$ names the current traffic domain, for example a product line; a \emph{regime} is a period with one label. The controller sets whether speculation is enabled ($z\in\{0,1\}$), the trainer's duty cycle $d\in\mathcal D=\{0,0.1,0.25,0.5,1\}$, and when the trainer exports a drafter, which is then hot-swapped into the server. Its objective is the output throughput served over the regime under an SLO that bounds the time per output token (TPOT) by twice the single-request decode time, $\Tslo$ (\nv{slo.m1}\,ms for Qwen3-8B, \nv{slo.m2}\,ms for the MoE target); it pursues this objective one second at a time, from the predictions below. Figure~\ref{fig:controller} summarizes the loop.
 
 \paragraph{Profitability frontier.} At concurrency $C$, speculation pays when its throughput exceeds that of plain decoding, i.e., when the ratio $G(a,C)$ of the two exceeds one. Verification makes every step more expensive, and at high concurrency there is no spare compute to absorb this, so the break-even acceptance $a^{*}(C)$ at which $G=1$ rises with load. The ratio is close to linear in acceptance at every load (\cref{sec:measure}), so for each domain $\ell$ we fit, from the throughput of a few drafter checkpoints at a few loads,
@@ -28,10 +34,3 @@ Here $\tau(d)=n/\min(rd,\rho)$ is the training time at data rate $\rho$, $b(d)=\
 
 \paragraph{Export, swap, and assumptions.} The trainer exports a drafter after 100, 200, 400, \dots{} requests learned in the current regime, each swapped in immediately; a label change flushes the trainer's buffer and restarts the schedule. The controller needs the label and a per-domain calibration from a short profiling run, but neither the regime's end nor the right time to stop; its rules and constants (\cref{app:controller}) were fixed before the evaluation checkpoint was frozen and not changed afterwards.
 
-\begin{figure*}[t]
-\centering
-\includegraphics[width=\linewidth]{figures/fig2.pdf}
-\captionsetup{skip=2pt}
-\caption{The control loop. Each second the controller combines engine and trainer measurements with the frozen calibration and applies three tests: whether the current drafter beats plain decoding (\cref{eq:switch}), whether training can still pay (structural ceiling, ceiling, convergence), and how much to train (SLO slack, or the value of \cref{eq:value} under saturation). Its outputs are a speculation switch, the trainer's duty cycle, and drafter exports that are hot-swapped into the running engine.}
-\label{fig:controller}
-\end{figure*}
