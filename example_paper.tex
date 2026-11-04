@@ -476,7 +476,7 @@ No label or curve
 
 \subsection{Robustness to mixed and unseen workloads}\label{sec:robust}
 
-\begin{table}[t]
+\begin{table*}[t]
 \caption{Mixed traffic (Qwen3-8B; phase B a 50/50 mixture): phase-B throughput relative to \pol{Static} (paired mean $\pm$ sd, \%; ratio to the best policy in parentheses).}
 \label{tab:mix}
 \centering\footnotesize\setlength{\tabcolsep}{4pt}
@@ -553,7 +553,7 @@ Full, label-free
 \end{tabular}
 \endgroup
 
-\end{table}
+\end{table*}
 
 \paragraph{Mixed traffic and stale labels.} Production traffic is often a mixture without a clean switch point, and the label can be stale. \Cref{tab:mix} serves 50/50 mixtures of code or Chinese with chat (42 runs; \cref{app:mix}). Neither pays for speculation at saturation, so \pol{Plain} is best and the others rank by how little they lose. Chinese--chat has a structural ceiling: \pol{Full} turns speculation off on the first tick and does not train, within noise of \pol{Switch} ($+0.2$\%); the label-free variant reaches the same decision ($-0.2$\%), and a stale label costs one wasted training round (1.4\%). Code--chat sits at break-even, where what training can return is within the calibration error: \pol{Full} ends $-2.7$\% behind \pol{Switch}, and the label-free variant, which trains until measured swap gains stop it, loses 2.6\% more. The curve is thus worth a few percent only at break-even; a drifting mixture is not covered.
 
@@ -570,7 +570,8 @@ Figure~\ref{fig:heldout} reports the outcomes (\cref{tab:heldout} in \cref{app:s
 
 \subsection{Cross-engine deployment and runtime overheads}\label{sec:sglang}
 
-\begin{table}[t]
+\begin{table*}
+
 \caption{SGLang: phase-B throughput relative to \pol{Static} (paired mean $\pm$ sd, \%; best in bold) and the worst ratio to the scenario's best policy.}
 \label{tab:sgl_main}
 \centering\footnotesize\setlength{\tabcolsep}{3pt}
@@ -650,7 +651,7 @@ Figure~\ref{fig:heldout} reports the outcomes (\cref{tab:heldout} in \cref{app:s
 \end{tabular}
 \endgroup
 
-\end{table}
+\end{table*}
 
 \paragraph{A second engine.} We reimplemented the three engine extensions on SGLang 0.5.10 \citep{zheng2024sglang} as a runtime patch of its EAGLE-3 path, so that the vLLM harness, controller, trainer, prompts, and seeds run unchanged (\cref{app:sglang}). The port passes its checks: greedy outputs with speculation on and off agree on every prompt, toggling speculation every 0.5\,s under load completes every request with exact token counts, drafter swaps move acceptance as expected, and the exported hidden states match Hugging Face Transformers (cosine $\ge$ 0.999). With a checkpoint calibrated and frozen by the same scripts, the controller made the same decisions as on vLLM (\cref{tab:sgl_main}): on Chinese it turned speculation off and did not train; on code it trained, gaining $+15.8$\% on Qwen3-8B and $+7.7$\% on the MoE target over \pol{Static}, where adapted drafters bring \pol{Full} level with \pol{Plain} on Qwen3-8B code and plain decoding loses 31.9\% on MoE, as in vLLM; in every scenario it is within 0.7\% of the best other policy that keeps a drafter loaded. SGLang runs speculation without its overlap scheduler, so its speculation-off state is 15\% slower than plain decoding at saturation, which leaves \pol{Plain} 39.9\% ahead on Chinese (\cref{app:sglang}): a speculation switch pays fully only where the engine makes a step without speculation as cheap as plain decoding.
 
